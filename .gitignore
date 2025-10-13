@@ -1,0 +1,29 @@
+# --- Build artifacts ---
+build*/
+out/
+*.obj
+*.pch
+*.pdb
+*.lib
+*.dll
+*.exe
+*.exp
+
+# --- Qt / CMake generated ---
+CMakeFiles/
+CMakeCache.txt
+*.cmake
+*.qrc.depends
+Makefile
+cmake_install.cmake
+
+# --- Visual Studio ---
+.vs/
+*.vcxproj*
+*.sln
+*.user
+*.db
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
