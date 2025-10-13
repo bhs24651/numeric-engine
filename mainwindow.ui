@@ -555,7 +555,7 @@
           </font>
          </property>
          <property name="text">
-          <string>asinh</string>
+          <string>sinh⁻¹</string>
          </property>
         </widget>
        </item>
@@ -574,7 +574,7 @@
           </font>
          </property>
          <property name="text">
-          <string>acosh</string>
+          <string>cosh⁻¹</string>
          </property>
         </widget>
        </item>
@@ -593,7 +593,7 @@
           </font>
          </property>
          <property name="text">
-          <string>atanh</string>
+          <string>tanh⁻¹</string>
          </property>
         </widget>
        </item>
