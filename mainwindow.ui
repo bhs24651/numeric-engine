@@ -37,8 +37,8 @@
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>391</width>
-      <height>541</height>
+      <width>400</width>
+      <height>551</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -76,7 +76,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>361</width>
+          <width>371</width>
           <height>131</height>
          </rect>
         </property>
@@ -90,7 +90,7 @@
             </font>
            </property>
            <property name="text">
-            <string> </string>
+            <string/>
            </property>
           </widget>
          </item>
@@ -1291,6 +1291,64 @@
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>pushButton</tabstop>
+  <tabstop>pushButton_2</tabstop>
+  <tabstop>pushButton_3</tabstop>
+  <tabstop>pushButton_4</tabstop>
+  <tabstop>pushButton_5</tabstop>
+  <tabstop>pushButton_6</tabstop>
+  <tabstop>pushButton_7</tabstop>
+  <tabstop>pushButton_12</tabstop>
+  <tabstop>pushButton_13</tabstop>
+  <tabstop>pushButton_14</tabstop>
+  <tabstop>pushButton_15</tabstop>
+  <tabstop>pushButton_16</tabstop>
+  <tabstop>pushButton_8</tabstop>
+  <tabstop>pushButton_17</tabstop>
+  <tabstop>pushButton_18</tabstop>
+  <tabstop>pushButton_19</tabstop>
+  <tabstop>pushButton_20</tabstop>
+  <tabstop>pushButton_21</tabstop>
+  <tabstop>pushButton_9</tabstop>
+  <tabstop>pushButton_22</tabstop>
+  <tabstop>pushButton_23</tabstop>
+  <tabstop>pushButton_24</tabstop>
+  <tabstop>pushButton_25</tabstop>
+  <tabstop>pushButton_26</tabstop>
+  <tabstop>pushButton_10</tabstop>
+  <tabstop>pushButton_27</tabstop>
+  <tabstop>pushButton_28</tabstop>
+  <tabstop>pushButton_29</tabstop>
+  <tabstop>pushButton_30</tabstop>
+  <tabstop>pushButton_31</tabstop>
+  <tabstop>comboBox</tabstop>
+  <tabstop>pushButton_32</tabstop>
+  <tabstop>pushButton_33</tabstop>
+  <tabstop>pushButton_34</tabstop>
+  <tabstop>pushButton_35</tabstop>
+  <tabstop>pushButton_36</tabstop>
+  <tabstop>pushButton_n7</tabstop>
+  <tabstop>pushButton_n8</tabstop>
+  <tabstop>pushButton_n9</tabstop>
+  <tabstop>pushButton_backspace</tabstop>
+  <tabstop>pushButton_ac</tabstop>
+  <tabstop>pushButton_n4</tabstop>
+  <tabstop>pushButton_n5</tabstop>
+  <tabstop>pushButton_n6</tabstop>
+  <tabstop>pushButton_multiply</tabstop>
+  <tabstop>pushButton_divide</tabstop>
+  <tabstop>pushButton_n1</tabstop>
+  <tabstop>pushButton_n2</tabstop>
+  <tabstop>pushButton_n3</tabstop>
+  <tabstop>pushButton_add</tabstop>
+  <tabstop>pushButton_subtract</tabstop>
+  <tabstop>pushButton_n0</tabstop>
+  <tabstop>pushButton_decimal</tabstop>
+  <tabstop>pushButton_plusminus</tabstop>
+  <tabstop>pushButton_ans</tabstop>
+  <tabstop>pushButton_equals</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
