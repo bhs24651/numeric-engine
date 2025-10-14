@@ -115,7 +115,7 @@
       </widget>
      </item>
      <item>
-      <layout class="QGridLayout" name="scientificInput" rowstretch="1,1,1,1,1,1" columnstretch="1,1,1,1,1,1">
+      <layout class="QGridLayout" name="scientificFunctionsInput" rowstretch="1,1,1,1,1,1" columnstretch="1,1,1,1,1,1">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -123,7 +123,7 @@
         <number>2</number>
        </property>
        <item row="0" column="0">
-        <widget class="QPushButton" name="pushButton">
+        <widget class="QPushButton" name="memory_clear">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -135,6 +135,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Memory Clear</string>
          </property>
          <property name="text">
           <string>MC</string>
@@ -142,7 +145,7 @@
         </widget>
        </item>
        <item row="0" column="4">
-        <widget class="QPushButton" name="pushButton_5">
+        <widget class="QPushButton" name="parentheses_left">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -154,6 +157,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Left Parentheses</string>
          </property>
          <property name="text">
           <string>(</string>
@@ -161,7 +167,7 @@
         </widget>
        </item>
        <item row="0" column="2">
-        <widget class="QPushButton" name="pushButton_3">
+        <widget class="QPushButton" name="memory_add">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -173,6 +179,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Memory Add</string>
          </property>
          <property name="text">
           <string>M+</string>
@@ -180,7 +189,7 @@
         </widget>
        </item>
        <item row="0" column="3">
-        <widget class="QPushButton" name="pushButton_4">
+        <widget class="QPushButton" name="memory_subtract">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -192,6 +201,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Memory Subtract</string>
          </property>
          <property name="text">
           <string>M−</string>
@@ -199,7 +211,7 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QPushButton" name="pushButton_7">
+        <widget class="QPushButton" name="square">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -211,6 +223,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Square</string>
          </property>
          <property name="text">
           <string>x²</string>
@@ -218,7 +233,7 @@
         </widget>
        </item>
        <item row="3" column="0">
-        <widget class="QPushButton" name="pushButton_9">
+        <widget class="QPushButton" name="hyp_sine">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -230,6 +245,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Hyperbolic Sine</string>
          </property>
          <property name="text">
           <string>sinh</string>
@@ -237,7 +255,7 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QPushButton" name="pushButton_2">
+        <widget class="QPushButton" name="memory_recall">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -249,6 +267,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Memory Recall</string>
          </property>
          <property name="text">
           <string>MR</string>
@@ -256,7 +277,7 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QPushButton" name="pushButton_8">
+        <widget class="QPushButton" name="sine">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -268,6 +289,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Sine</string>
          </property>
          <property name="text">
           <string>sin</string>
@@ -275,7 +299,7 @@
         </widget>
        </item>
        <item row="4" column="0">
-        <widget class="QPushButton" name="pushButton_10">
+        <widget class="QPushButton" name="logarithm_common">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -288,13 +312,16 @@
            <pointsize>9</pointsize>
           </font>
          </property>
+         <property name="toolTip">
+          <string>Common Logarithm</string>
+         </property>
          <property name="text">
-          <string>ln</string>
+          <string>log</string>
          </property>
         </widget>
        </item>
        <item row="0" column="5">
-        <widget class="QPushButton" name="pushButton_6">
+        <widget class="QPushButton" name="parentheses_right">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -306,6 +333,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Right Parentheses</string>
          </property>
          <property name="text">
           <string>)</string>
@@ -313,7 +343,7 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QPushButton" name="pushButton_12">
+        <widget class="QPushButton" name="exponential">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -325,6 +355,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Exponential</string>
          </property>
          <property name="text">
           <string>xʸ</string>
@@ -332,7 +365,7 @@
         </widget>
        </item>
        <item row="1" column="2">
-        <widget class="QPushButton" name="pushButton_13">
+        <widget class="QPushButton" name="square_root">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -344,6 +377,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Square Root</string>
          </property>
          <property name="text">
           <string>√(x)</string>
@@ -351,7 +387,7 @@
         </widget>
        </item>
        <item row="1" column="3">
-        <widget class="QPushButton" name="pushButton_14">
+        <widget class="QPushButton" name="x_th_root">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -364,13 +400,16 @@
            <pointsize>9</pointsize>
           </font>
          </property>
+         <property name="toolTip">
+          <string>x-th Root</string>
+         </property>
          <property name="text">
-          <string>ʸ√(x)</string>
+          <string>ˣ√(y)</string>
          </property>
         </widget>
        </item>
        <item row="1" column="4">
-        <widget class="QPushButton" name="pushButton_15">
+        <widget class="QPushButton" name="reciprocal">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -382,6 +421,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Reciprocal</string>
          </property>
          <property name="text">
           <string>⅟x</string>
@@ -389,7 +431,7 @@
         </widget>
        </item>
        <item row="1" column="5">
-        <widget class="QPushButton" name="pushButton_16">
+        <widget class="QPushButton" name="absolute_value">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -401,6 +443,12 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Absolute Value</string>
+         </property>
+         <property name="statusTip">
+          <string/>
          </property>
          <property name="text">
           <string>| x |</string>
@@ -408,7 +456,7 @@
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QPushButton" name="pushButton_17">
+        <widget class="QPushButton" name="cosine">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -420,6 +468,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Cosine</string>
          </property>
          <property name="text">
           <string>cos</string>
@@ -427,7 +478,7 @@
         </widget>
        </item>
        <item row="2" column="2">
-        <widget class="QPushButton" name="pushButton_18">
+        <widget class="QPushButton" name="tangent">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -439,6 +490,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Tangent</string>
          </property>
          <property name="text">
           <string>tan</string>
@@ -446,7 +500,7 @@
         </widget>
        </item>
        <item row="2" column="3">
-        <widget class="QPushButton" name="pushButton_19">
+        <widget class="QPushButton" name="inverse_sine">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -458,6 +512,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Inverse Sine</string>
          </property>
          <property name="text">
           <string>sin⁻¹</string>
@@ -465,7 +522,7 @@
         </widget>
        </item>
        <item row="2" column="4">
-        <widget class="QPushButton" name="pushButton_20">
+        <widget class="QPushButton" name="inverse_cosine">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -477,6 +534,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Inverse Cosine</string>
          </property>
          <property name="text">
           <string>cos⁻¹</string>
@@ -484,7 +544,7 @@
         </widget>
        </item>
        <item row="2" column="5">
-        <widget class="QPushButton" name="pushButton_21">
+        <widget class="QPushButton" name="inverse_tangent">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -496,6 +556,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Inverse Tangent</string>
          </property>
          <property name="text">
           <string>tan⁻¹</string>
@@ -503,7 +566,7 @@
         </widget>
        </item>
        <item row="3" column="1">
-        <widget class="QPushButton" name="pushButton_22">
+        <widget class="QPushButton" name="hyp_cosine">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -515,6 +578,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Hyperbolic Cosine</string>
          </property>
          <property name="text">
           <string>cosh</string>
@@ -522,7 +588,7 @@
         </widget>
        </item>
        <item row="3" column="2">
-        <widget class="QPushButton" name="pushButton_23">
+        <widget class="QPushButton" name="hyp_tangent">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -534,6 +600,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Hyperbolic Tangent</string>
          </property>
          <property name="text">
           <string>tanh</string>
@@ -541,7 +610,7 @@
         </widget>
        </item>
        <item row="3" column="3">
-        <widget class="QPushButton" name="pushButton_24">
+        <widget class="QPushButton" name="inverse_hyp_sine">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -553,6 +622,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Inverse Hyperbolic Sine</string>
          </property>
          <property name="text">
           <string>sinh⁻¹</string>
@@ -560,7 +632,7 @@
         </widget>
        </item>
        <item row="3" column="4">
-        <widget class="QPushButton" name="pushButton_25">
+        <widget class="QPushButton" name="inverse_hyp_cosine">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -572,6 +644,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Inverse Hyperbolic Cosine</string>
          </property>
          <property name="text">
           <string>cosh⁻¹</string>
@@ -579,7 +654,7 @@
         </widget>
        </item>
        <item row="3" column="5">
-        <widget class="QPushButton" name="pushButton_26">
+        <widget class="QPushButton" name="inverse_hyp_tangent">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -591,6 +666,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Inverse Hyperbolic Tangent</string>
          </property>
          <property name="text">
           <string>tanh⁻¹</string>
@@ -598,7 +676,7 @@
         </widget>
        </item>
        <item row="4" column="1">
-        <widget class="QPushButton" name="pushButton_27">
+        <widget class="QPushButton" name="logarithm_natural">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -611,13 +689,16 @@
            <pointsize>9</pointsize>
           </font>
          </property>
+         <property name="toolTip">
+          <string>Natural Logarithm</string>
+         </property>
          <property name="text">
-          <string>log</string>
+          <string>ln</string>
          </property>
         </widget>
        </item>
        <item row="4" column="2">
-        <widget class="QPushButton" name="pushButton_28">
+        <widget class="QPushButton" name="exponential_base10">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -630,32 +711,16 @@
            <pointsize>9</pointsize>
           </font>
          </property>
-         <property name="text">
-          <string>eˣ</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="3">
-        <widget class="QPushButton" name="pushButton_29">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="font">
-          <font>
-           <family>DejaVu Sans</family>
-           <pointsize>9</pointsize>
-          </font>
+         <property name="toolTip">
+          <string>Base-10 Exponential</string>
          </property>
          <property name="text">
           <string>10ˣ</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="4">
-        <widget class="QPushButton" name="pushButton_30">
+       <item row="4" column="3">
+        <widget class="QPushButton" name="exponential_natural">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -667,6 +732,31 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Natural Exponential</string>
+         </property>
+         <property name="text">
+          <string>eˣ</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="4">
+        <widget class="QPushButton" name="exponent_scientific">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <family>DejaVu Sans</family>
+           <pointsize>9</pointsize>
+          </font>
+         </property>
+         <property name="toolTip">
+          <string>Scientific Notation Exponent</string>
          </property>
          <property name="text">
           <string>EXP</string>
@@ -674,7 +764,7 @@
         </widget>
        </item>
        <item row="4" column="5">
-        <widget class="QPushButton" name="pushButton_31">
+        <widget class="QPushButton" name="modulus">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -686,6 +776,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Modulus</string>
          </property>
          <property name="text">
           <string>Mod</string>
@@ -693,7 +786,7 @@
         </widget>
        </item>
        <item row="5" column="1">
-        <widget class="QPushButton" name="pushButton_32">
+        <widget class="QPushButton" name="factorial">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -705,6 +798,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Factorial</string>
          </property>
          <property name="text">
           <string>x!</string>
@@ -712,7 +808,7 @@
         </widget>
        </item>
        <item row="5" column="2">
-        <widget class="QPushButton" name="pushButton_33">
+        <widget class="QPushButton" name="random_number">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -724,6 +820,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Random Number</string>
          </property>
          <property name="text">
           <string>Rand</string>
@@ -731,7 +830,7 @@
         </widget>
        </item>
        <item row="5" column="3">
-        <widget class="QPushButton" name="pushButton_34">
+        <widget class="QPushButton" name="percent">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -743,6 +842,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Percent</string>
          </property>
          <property name="text">
           <string>%</string>
@@ -750,7 +852,7 @@
         </widget>
        </item>
        <item row="5" column="4">
-        <widget class="QPushButton" name="pushButton_35">
+        <widget class="QPushButton" name="constant_pi">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -762,6 +864,9 @@
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Constant Pi</string>
          </property>
          <property name="text">
           <string>π</string>
@@ -769,7 +874,7 @@
         </widget>
        </item>
        <item row="5" column="5">
-        <widget class="QPushButton" name="pushButton_36">
+        <widget class="QPushButton" name="constant_e">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -782,18 +887,24 @@
            <pointsize>9</pointsize>
           </font>
          </property>
+         <property name="toolTip">
+          <string>Constant e</string>
+         </property>
          <property name="text">
           <string>e</string>
          </property>
         </widget>
        </item>
        <item row="5" column="0">
-        <widget class="QComboBox" name="comboBox">
+        <widget class="QComboBox" name="angleUnitSelection">
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Angle Representation</string>
          </property>
          <item>
           <property name="text">
@@ -815,12 +926,12 @@
       </layout>
      </item>
      <item>
-      <layout class="QGridLayout" name="gridLayout">
+      <layout class="QGridLayout" name="arithmeticButtons">
        <property name="spacing">
         <number>2</number>
        </property>
        <item row="0" column="0">
-        <widget class="QPushButton" name="pushButton_n7">
+        <widget class="QPushButton" name="n7">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -830,8 +941,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Seven</string>
          </property>
          <property name="text">
           <string>7</string>
@@ -839,7 +953,7 @@
         </widget>
        </item>
        <item row="3" column="3">
-        <widget class="QPushButton" name="pushButton_ans">
+        <widget class="QPushButton" name="ans">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -849,8 +963,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Previous Answer</string>
          </property>
          <property name="text">
           <string>Ans</string>
@@ -858,7 +975,7 @@
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QPushButton" name="pushButton_n2">
+        <widget class="QPushButton" name="n2">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -868,8 +985,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Two</string>
          </property>
          <property name="text">
           <string>2</string>
@@ -877,7 +997,7 @@
         </widget>
        </item>
        <item row="2" column="3">
-        <widget class="QPushButton" name="pushButton_add">
+        <widget class="QPushButton" name="add">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -887,8 +1007,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Add</string>
          </property>
          <property name="text">
           <string>+</string>
@@ -896,7 +1019,7 @@
         </widget>
        </item>
        <item row="3" column="2">
-        <widget class="QPushButton" name="pushButton_plusminus">
+        <widget class="QPushButton" name="negate">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -906,8 +1029,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>10</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Negative</string>
          </property>
          <property name="text">
           <string>+/−</string>
@@ -915,7 +1041,7 @@
         </widget>
        </item>
        <item row="0" column="4">
-        <widget class="QPushButton" name="pushButton_ac">
+        <widget class="QPushButton" name="ac">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -925,8 +1051,12 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
+           <bold>false</bold>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>All Clear</string>
          </property>
          <property name="text">
           <string>AC</string>
@@ -934,7 +1064,7 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QPushButton" name="pushButton_n4">
+        <widget class="QPushButton" name="n4">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -944,8 +1074,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Four</string>
          </property>
          <property name="text">
           <string>4</string>
@@ -953,7 +1086,7 @@
         </widget>
        </item>
        <item row="1" column="2">
-        <widget class="QPushButton" name="pushButton_n6">
+        <widget class="QPushButton" name="n6">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -963,8 +1096,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Six</string>
          </property>
          <property name="text">
           <string>6</string>
@@ -972,7 +1108,7 @@
         </widget>
        </item>
        <item row="0" column="3">
-        <widget class="QPushButton" name="pushButton_backspace">
+        <widget class="QPushButton" name="backspace">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -982,8 +1118,12 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
+           <bold>false</bold>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Backspace</string>
          </property>
          <property name="text">
           <string>⌫</string>
@@ -991,7 +1131,7 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QPushButton" name="pushButton_n5">
+        <widget class="QPushButton" name="n5">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1001,8 +1141,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Five</string>
          </property>
          <property name="text">
           <string>5</string>
@@ -1010,7 +1153,7 @@
         </widget>
        </item>
        <item row="3" column="0">
-        <widget class="QPushButton" name="pushButton_n0">
+        <widget class="QPushButton" name="n0">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1020,8 +1163,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Zero</string>
          </property>
          <property name="text">
           <string>0</string>
@@ -1029,7 +1175,7 @@
         </widget>
        </item>
        <item row="0" column="2">
-        <widget class="QPushButton" name="pushButton_n9">
+        <widget class="QPushButton" name="n9">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1039,8 +1185,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Nine</string>
          </property>
          <property name="text">
           <string>9</string>
@@ -1048,7 +1197,7 @@
         </widget>
        </item>
        <item row="3" column="4">
-        <widget class="QPushButton" name="pushButton_equals">
+        <widget class="QPushButton" name="equals">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1058,7 +1207,8 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
+           <bold>false</bold>
           </font>
          </property>
          <property name="mouseTracking">
@@ -1067,13 +1217,16 @@
          <property name="contextMenuPolicy">
           <enum>Qt::ContextMenuPolicy::DefaultContextMenu</enum>
          </property>
+         <property name="toolTip">
+          <string>Equals</string>
+         </property>
          <property name="text">
           <string>=</string>
          </property>
         </widget>
        </item>
        <item row="1" column="4">
-        <widget class="QPushButton" name="pushButton_divide">
+        <widget class="QPushButton" name="divide">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1083,8 +1236,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Divide</string>
          </property>
          <property name="text">
           <string>÷</string>
@@ -1092,7 +1248,7 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QPushButton" name="pushButton_n1">
+        <widget class="QPushButton" name="n1">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1102,8 +1258,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>One</string>
          </property>
          <property name="text">
           <string>1</string>
@@ -1111,7 +1270,7 @@
         </widget>
        </item>
        <item row="1" column="3">
-        <widget class="QPushButton" name="pushButton_multiply">
+        <widget class="QPushButton" name="multiply">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1121,8 +1280,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Multiply</string>
          </property>
          <property name="text">
           <string>×</string>
@@ -1130,7 +1292,7 @@
         </widget>
        </item>
        <item row="2" column="4">
-        <widget class="QPushButton" name="pushButton_subtract">
+        <widget class="QPushButton" name="subtract">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1140,8 +1302,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Subtract</string>
          </property>
          <property name="text">
           <string>−</string>
@@ -1149,7 +1314,7 @@
         </widget>
        </item>
        <item row="3" column="1">
-        <widget class="QPushButton" name="pushButton_decimal">
+        <widget class="QPushButton" name="decimal_point">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1159,8 +1324,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Decimal Point</string>
          </property>
          <property name="text">
           <string>.</string>
@@ -1168,7 +1336,7 @@
         </widget>
        </item>
        <item row="2" column="2">
-        <widget class="QPushButton" name="pushButton_n3">
+        <widget class="QPushButton" name="n3">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1178,8 +1346,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Three</string>
          </property>
          <property name="text">
           <string>3</string>
@@ -1187,7 +1358,7 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QPushButton" name="pushButton_n8">
+        <widget class="QPushButton" name="n8">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -1197,8 +1368,11 @@
          <property name="font">
           <font>
            <family>DejaVu Sans</family>
-           <pointsize>11</pointsize>
+           <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="toolTip">
+          <string>Eight</string>
          </property>
          <property name="text">
           <string>8</string>
@@ -1292,62 +1466,62 @@
   </action>
  </widget>
  <tabstops>
-  <tabstop>pushButton</tabstop>
-  <tabstop>pushButton_2</tabstop>
-  <tabstop>pushButton_3</tabstop>
-  <tabstop>pushButton_4</tabstop>
-  <tabstop>pushButton_5</tabstop>
-  <tabstop>pushButton_6</tabstop>
-  <tabstop>pushButton_7</tabstop>
-  <tabstop>pushButton_12</tabstop>
-  <tabstop>pushButton_13</tabstop>
-  <tabstop>pushButton_14</tabstop>
-  <tabstop>pushButton_15</tabstop>
-  <tabstop>pushButton_16</tabstop>
-  <tabstop>pushButton_8</tabstop>
-  <tabstop>pushButton_17</tabstop>
-  <tabstop>pushButton_18</tabstop>
-  <tabstop>pushButton_19</tabstop>
-  <tabstop>pushButton_20</tabstop>
-  <tabstop>pushButton_21</tabstop>
-  <tabstop>pushButton_9</tabstop>
-  <tabstop>pushButton_22</tabstop>
-  <tabstop>pushButton_23</tabstop>
-  <tabstop>pushButton_24</tabstop>
-  <tabstop>pushButton_25</tabstop>
-  <tabstop>pushButton_26</tabstop>
-  <tabstop>pushButton_10</tabstop>
-  <tabstop>pushButton_27</tabstop>
-  <tabstop>pushButton_28</tabstop>
-  <tabstop>pushButton_29</tabstop>
-  <tabstop>pushButton_30</tabstop>
-  <tabstop>pushButton_31</tabstop>
-  <tabstop>comboBox</tabstop>
-  <tabstop>pushButton_32</tabstop>
-  <tabstop>pushButton_33</tabstop>
-  <tabstop>pushButton_34</tabstop>
-  <tabstop>pushButton_35</tabstop>
-  <tabstop>pushButton_36</tabstop>
-  <tabstop>pushButton_n7</tabstop>
-  <tabstop>pushButton_n8</tabstop>
-  <tabstop>pushButton_n9</tabstop>
-  <tabstop>pushButton_backspace</tabstop>
-  <tabstop>pushButton_ac</tabstop>
-  <tabstop>pushButton_n4</tabstop>
-  <tabstop>pushButton_n5</tabstop>
-  <tabstop>pushButton_n6</tabstop>
-  <tabstop>pushButton_multiply</tabstop>
-  <tabstop>pushButton_divide</tabstop>
-  <tabstop>pushButton_n1</tabstop>
-  <tabstop>pushButton_n2</tabstop>
-  <tabstop>pushButton_n3</tabstop>
-  <tabstop>pushButton_add</tabstop>
-  <tabstop>pushButton_subtract</tabstop>
-  <tabstop>pushButton_n0</tabstop>
-  <tabstop>pushButton_decimal</tabstop>
-  <tabstop>pushButton_plusminus</tabstop>
-  <tabstop>pushButton_ans</tabstop>
-  <tabstop>pushButton_equals</tabstop>
+  <tabstop>memory_clear</tabstop>
+  <tabstop>memory_recall</tabstop>
+  <tabstop>memory_add</tabstop>
+  <tabstop>memory_subtract</tabstop>
+  <tabstop>parentheses_left</tabstop>
+  <tabstop>parentheses_right</tabstop>
+  <tabstop>square</tabstop>
+  <tabstop>exponential</tabstop>
+  <tabstop>square_root</tabstop>
+  <tabstop>x_th_root</tabstop>
+  <tabstop>reciprocal</tabstop>
+  <tabstop>absolute_value</tabstop>
+  <tabstop>sine</tabstop>
+  <tabstop>cosine</tabstop>
+  <tabstop>tangent</tabstop>
+  <tabstop>inverse_sine</tabstop>
+  <tabstop>inverse_cosine</tabstop>
+  <tabstop>inverse_tangent</tabstop>
+  <tabstop>hyp_sine</tabstop>
+  <tabstop>hyp_cosine</tabstop>
+  <tabstop>hyp_tangent</tabstop>
+  <tabstop>inverse_hyp_sine</tabstop>
+  <tabstop>inverse_hyp_cosine</tabstop>
+  <tabstop>inverse_hyp_tangent</tabstop>
+  <tabstop>logarithm_common</tabstop>
+  <tabstop>logarithm_natural</tabstop>
+  <tabstop>exponential_base10</tabstop>
+  <tabstop>exponential_natural</tabstop>
+  <tabstop>exponent_scientific</tabstop>
+  <tabstop>modulus</tabstop>
+  <tabstop>angleUnitSelection</tabstop>
+  <tabstop>factorial</tabstop>
+  <tabstop>random_number</tabstop>
+  <tabstop>percent</tabstop>
+  <tabstop>constant_pi</tabstop>
+  <tabstop>constant_e</tabstop>
+  <tabstop>n7</tabstop>
+  <tabstop>n8</tabstop>
+  <tabstop>n9</tabstop>
+  <tabstop>backspace</tabstop>
+  <tabstop>ac</tabstop>
+  <tabstop>n4</tabstop>
+  <tabstop>n5</tabstop>
+  <tabstop>n6</tabstop>
+  <tabstop>multiply</tabstop>
+  <tabstop>divide</tabstop>
+  <tabstop>n1</tabstop>
+  <tabstop>n2</tabstop>
+  <tabstop>n3</tabstop>
+  <tabstop>add</tabstop>
+  <tabstop>subtract</tabstop>
+  <tabstop>n0</tabstop>
+  <tabstop>decimal_point</tabstop>
+  <tabstop>negate</tabstop>
+  <tabstop>ans</tabstop>
+  <tabstop>equals</tabstop>
  </tabstops>
  <resources/>
  <connections/>
