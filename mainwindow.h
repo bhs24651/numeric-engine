@@ -14,8 +14,26 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+private slots:
+    // Declare slot functions for Menu Bar actions
+
+    // View
+    void on_actionBasic_triggered();
+    void on_actionScientific_triggered();
+    void on_actionProgrammer_triggered();
+
+    // Converter
+    void openConverter();
+
+    // Settings
+    void openSettings();
+
+    // Help
+    void on_actionHelp_triggered();
+    void on_actionAbout_triggered();
 
 private:
     Ui::MainWindow *ui;
