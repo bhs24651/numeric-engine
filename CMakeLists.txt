@@ -28,6 +28,9 @@ if (WIN32)
         settings.cpp
         settings.h
         settings.ui
+        help.cpp
+        help.h
+        help.ui
     )
 elseif (APPLE)
     # macOS: make a proper .app bundle
@@ -42,6 +45,9 @@ elseif (APPLE)
         settings.cpp
         settings.h
         settings.ui
+        help.cpp
+        help.h
+        help.ui
     )
 else ()
     # Linux / other platforms
@@ -56,6 +62,9 @@ else ()
         settings.cpp
         settings.h
         settings.ui
+        help.cpp
+        help.h
+        help.ui
     )
 endif ()
 
