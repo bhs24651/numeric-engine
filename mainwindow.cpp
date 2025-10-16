@@ -4,6 +4,7 @@
 #include <QDebug> // for outputting debug messages
 
 #include "converter.h" // Include header for Converter form
+#include "settings.h" // Include header for Settings form
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -67,7 +68,10 @@ void MainWindow::openConverter()
 // Settings
 void MainWindow::openSettings()
 {
-    qDebug() << "Opening Settings...";
+    // Create an instance of the Settings form
+    settings* settings_form = new settings(this);
+    // ... and show it on screen
+    settings_form->show();
 }
 
 // Help

@@ -25,6 +25,9 @@ if (WIN32)
         converter.cpp
         converter.h
         converter.ui
+        settings.cpp
+        settings.h
+        settings.ui
     )
 elseif (APPLE)
     # macOS: make a proper .app bundle
@@ -36,6 +39,9 @@ elseif (APPLE)
         converter.cpp
         converter.h
         converter.ui
+        settings.cpp
+        settings.h
+        settings.ui
     )
 else ()
     # Linux / other platforms
@@ -47,6 +53,9 @@ else ()
         converter.cpp
         converter.h
         converter.ui
+        settings.cpp
+        settings.h
+        settings.ui
     )
 endif ()
 
