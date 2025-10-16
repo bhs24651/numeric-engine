@@ -22,6 +22,9 @@ if (WIN32)
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        converter.cpp
+        converter.h
+        converter.ui
     )
 elseif (APPLE)
     # macOS: make a proper .app bundle
@@ -30,6 +33,9 @@ elseif (APPLE)
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        converter.cpp
+        converter.h
+        converter.ui
     )
 else ()
     # Linux / other platforms
@@ -38,6 +44,9 @@ else ()
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        converter.cpp
+        converter.h
+        converter.ui
     )
 endif ()
 
