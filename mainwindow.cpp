@@ -1,7 +1,9 @@
 #include "mainwindow.h"
-#include "./ui_mainwindow.h"
+#include "ui_mainwindow.h"
 
 #include <QDebug> // for outputting debug messages
+
+#include "converter.h" // Include header for Converter form
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -39,23 +41,27 @@ MainWindow::~MainWindow()
 // View
 void MainWindow::on_actionBasic_triggered()
 {
-    qDebug() << "Switching to Basic View...";
-    // Add your custom logic here. For example:
-    // ui->label->setText("Button clicked!");
+    // Switch to Basic View
+    ui->calculator_views->setCurrentIndex(0);
 }
 void MainWindow::on_actionScientific_triggered()
 {
-    qDebug() << "Switching to Scientific View...";
+    // Switch to Scientific View
+    ui->calculator_views->setCurrentIndex(1);
 }
 void MainWindow::on_actionProgrammer_triggered()
 {
-    qDebug() << "Switching to Programmer View...";
+    // Switch to Programmer View
+    ui->calculator_views->setCurrentIndex(2);
 }
 
 // Converter
 void MainWindow::openConverter()
 {
-    qDebug() << "Opening Converter...";
+    // Create an instance of the Converter form
+    converter* converter_form = new converter(this); 
+    // ... and show it on screen
+    converter_form->show();
 }
 
 // Settings
