@@ -31,6 +31,9 @@ if (WIN32)
         help.cpp
         help.h
         help.ui
+        about.cpp
+        about.h
+        about.ui
     )
 elseif (APPLE)
     # macOS: make a proper .app bundle
@@ -48,6 +51,9 @@ elseif (APPLE)
         help.cpp
         help.h
         help.ui
+        about.cpp
+        about.h
+        about.ui
     )
 else ()
     # Linux / other platforms
@@ -65,6 +71,9 @@ else ()
         help.cpp
         help.h
         help.ui
+        about.cpp
+        about.h
+        about.ui
     )
 endif ()
 

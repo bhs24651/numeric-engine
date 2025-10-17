@@ -6,6 +6,7 @@
 #include "converter.h" // Include header for Converter form
 #include "settings.h" // Include header for Settings form
 #include "help.h" // Include header for Help form
+#include "about.h" // Include header for About form
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -85,5 +86,8 @@ void MainWindow::on_actionHelp_triggered()
 }
 void MainWindow::on_actionAbout_triggered()
 {
-    qDebug() << "Opening About Section...";
+    // Create an instance of the About form
+    about* about_form = new about(this);
+    // ... and show it on screen
+    about_form->show();
 }
