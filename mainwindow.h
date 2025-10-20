@@ -60,6 +60,8 @@ private slots:
     void on_button_negate_clicked();
     void on_button_subtract_clicked();
 
+    void on_angleUnitSelection_activated(int i);
+
     void on_button_absolute_value_clicked();
     void on_button_constant_e_clicked();
     void on_button_constant_pi_clicked();
