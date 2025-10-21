@@ -35,7 +35,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Connect the calculator's buttons to on-click functions
 
-    // Scientific View 
+    // Buttons in Scientific View
+
     QObject::connect(ui->ac, &QPushButton::clicked, this, &MainWindow::on_button_ac_clicked);
     QObject::connect(ui->add, &QPushButton::clicked, this, &MainWindow::on_button_add_clicked);
     QObject::connect(ui->ans, &QPushButton::clicked, this, &MainWindow::on_button_ans_clicked);
@@ -56,6 +57,13 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(ui->n9, &QPushButton::clicked, this, &MainWindow::on_button_n9_clicked);
     QObject::connect(ui->negate, &QPushButton::clicked, this, &MainWindow::on_button_negate_clicked);
     QObject::connect(ui->subtract, &QPushButton::clicked, this, &MainWindow::on_button_subtract_clicked);
+
+    QObject::connect(ui->memory_add, &QPushButton::clicked, this, &MainWindow::on_button_memory_add_clicked);
+    QObject::connect(ui->memory_clear, &QPushButton::clicked, this, &MainWindow::on_button_memory_clear_clicked);
+    QObject::connect(ui->memory_recall, &QPushButton::clicked, this, &MainWindow::on_button_memory_recall_clicked);
+    QObject::connect(ui->memory_subtract, &QPushButton::clicked, this, &MainWindow::on_button_memory_subtract_clicked);
+    QObject::connect(ui->parentheses_left, &QPushButton::clicked, this, &MainWindow::on_button_parentheses_left_clicked);
+    QObject::connect(ui->parentheses_right, &QPushButton::clicked, this, &MainWindow::on_button_parentheses_right_clicked);
 
     QObject::connect(ui->angleUnitSelection, &QComboBox::activated, this, &MainWindow::on_angleUnitSelection_activated);
 
@@ -79,13 +87,7 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(ui->inverse_tangent, &QPushButton::clicked, this, &MainWindow::on_button_inverse_tangent_clicked);
     QObject::connect(ui->logarithm_common, &QPushButton::clicked, this, &MainWindow::on_button_logarithm_common_clicked);
     QObject::connect(ui->logarithm_natural, &QPushButton::clicked, this, &MainWindow::on_button_logarithm_natural_clicked);
-    QObject::connect(ui->memory_add, &QPushButton::clicked, this, &MainWindow::on_button_memory_add_clicked);
-    QObject::connect(ui->memory_clear, &QPushButton::clicked, this, &MainWindow::on_button_memory_clear_clicked);
-    QObject::connect(ui->memory_recall, &QPushButton::clicked, this, &MainWindow::on_button_memory_recall_clicked);
-    QObject::connect(ui->memory_subtract, &QPushButton::clicked, this, &MainWindow::on_button_memory_subtract_clicked);
     QObject::connect(ui->modulus, &QPushButton::clicked, this, &MainWindow::on_button_modulus_clicked);
-    QObject::connect(ui->parentheses_left, &QPushButton::clicked, this, &MainWindow::on_button_parentheses_left_clicked);
-    QObject::connect(ui->parentheses_right, &QPushButton::clicked, this, &MainWindow::on_button_parentheses_right_clicked);
     QObject::connect(ui->percent, &QPushButton::clicked, this, &MainWindow::on_button_percent_clicked);
     QObject::connect(ui->random_number, &QPushButton::clicked, this, &MainWindow::on_button_random_number_clicked);
     QObject::connect(ui->reciprocal, &QPushButton::clicked, this, &MainWindow::on_button_reciprocal_clicked);
@@ -95,7 +97,101 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(ui->tangent, &QPushButton::clicked, this, &MainWindow::on_button_tangent_clicked);
     QObject::connect(ui->x_th_root, &QPushButton::clicked, this, &MainWindow::on_button_x_th_root_clicked);
 
-    // TODO: Copy and Paste the above function for all other buttons (and interactable elements)
+    // Basic View
+
+    QObject::connect(ui->ac_2, &QPushButton::clicked, this, &MainWindow::on_button_ac_clicked);
+    QObject::connect(ui->add_2, &QPushButton::clicked, this, &MainWindow::on_button_add_clicked);
+    QObject::connect(ui->ans_2, &QPushButton::clicked, this, &MainWindow::on_button_ans_clicked);
+    QObject::connect(ui->backspace_2, &QPushButton::clicked, this, &MainWindow::on_button_backspace_clicked);
+    QObject::connect(ui->decimal_point_2, &QPushButton::clicked, this, &MainWindow::on_button_decimal_point_clicked);
+    QObject::connect(ui->divide_2, &QPushButton::clicked, this, &MainWindow::on_button_divide_clicked);
+    QObject::connect(ui->equals_2, &QPushButton::clicked, this, &MainWindow::on_button_equals_clicked);
+    QObject::connect(ui->multiply_2, &QPushButton::clicked, this, &MainWindow::on_button_multiply_clicked);
+    QObject::connect(ui->n0_2, &QPushButton::clicked, this, &MainWindow::on_button_n0_clicked);
+    QObject::connect(ui->n1_2, &QPushButton::clicked, this, &MainWindow::on_button_n1_clicked);
+    QObject::connect(ui->n2_2, &QPushButton::clicked, this, &MainWindow::on_button_n2_clicked);
+    QObject::connect(ui->n3_2, &QPushButton::clicked, this, &MainWindow::on_button_n3_clicked);
+    QObject::connect(ui->n4_2, &QPushButton::clicked, this, &MainWindow::on_button_n4_clicked);
+    QObject::connect(ui->n5_2, &QPushButton::clicked, this, &MainWindow::on_button_n5_clicked);
+    QObject::connect(ui->n6_2, &QPushButton::clicked, this, &MainWindow::on_button_n6_clicked);
+    QObject::connect(ui->n7_2, &QPushButton::clicked, this, &MainWindow::on_button_n7_clicked);
+    QObject::connect(ui->n8_2, &QPushButton::clicked, this, &MainWindow::on_button_n8_clicked);
+    QObject::connect(ui->n9_2, &QPushButton::clicked, this, &MainWindow::on_button_n9_clicked);
+    QObject::connect(ui->negate_2, &QPushButton::clicked, this, &MainWindow::on_button_negate_clicked);
+    QObject::connect(ui->subtract_2, &QPushButton::clicked, this, &MainWindow::on_button_subtract_clicked);
+
+    QObject::connect(ui->memory_add_2, &QPushButton::clicked, this, &MainWindow::on_button_memory_add_clicked);
+    QObject::connect(ui->memory_clear_2, &QPushButton::clicked, this, &MainWindow::on_button_memory_clear_clicked);
+    QObject::connect(ui->memory_recall_2, &QPushButton::clicked, this, &MainWindow::on_button_memory_recall_clicked);
+    QObject::connect(ui->memory_subtract_2, &QPushButton::clicked, this, &MainWindow::on_button_memory_subtract_clicked);
+    QObject::connect(ui->parentheses_left_2, &QPushButton::clicked, this, &MainWindow::on_button_parentheses_left_clicked);
+    QObject::connect(ui->parentheses_right_2, &QPushButton::clicked, this, &MainWindow::on_button_parentheses_right_clicked);
+
+    QObject::connect(ui->absolute_value_2, & QPushButton::clicked, this, &MainWindow::on_button_absolute_value_clicked);
+    QObject::connect(ui->exponential_2, &QPushButton::clicked, this, &MainWindow::on_button_exponential_clicked);
+    QObject::connect(ui->reciprocal_2, &QPushButton::clicked, this, &MainWindow::on_button_reciprocal_clicked);
+    QObject::connect(ui->square_2, &QPushButton::clicked, this, &MainWindow::on_button_square_clicked);
+    QObject::connect(ui->square_root_2, &QPushButton::clicked, this, &MainWindow::on_button_square_root_clicked);
+    QObject::connect(ui->x_th_root_2, &QPushButton::clicked, this, &MainWindow::on_button_x_th_root_clicked);
+
+    // Programmer View
+    
+    QObject::connect(ui->ac_3, &QPushButton::clicked, this, &MainWindow::on_button_ac_clicked);
+    QObject::connect(ui->add_3, &QPushButton::clicked, this, &MainWindow::on_button_add_clicked);
+    QObject::connect(ui->ans_3, &QPushButton::clicked, this, &MainWindow::on_button_ans_clicked);
+    QObject::connect(ui->backspace_3, &QPushButton::clicked, this, &MainWindow::on_button_backspace_clicked);
+    QObject::connect(ui->decimal_point_3, &QPushButton::clicked, this, &MainWindow::on_button_decimal_point_clicked);
+    QObject::connect(ui->divide_3, &QPushButton::clicked, this, &MainWindow::on_button_divide_clicked);
+    QObject::connect(ui->equals_3, &QPushButton::clicked, this, &MainWindow::on_button_equals_clicked);
+    QObject::connect(ui->multiply_3, &QPushButton::clicked, this, &MainWindow::on_button_multiply_clicked);
+    QObject::connect(ui->n0_3, &QPushButton::clicked, this, &MainWindow::on_button_n0_clicked);
+    QObject::connect(ui->n1_3, &QPushButton::clicked, this, &MainWindow::on_button_n1_clicked);
+    QObject::connect(ui->n2_3, &QPushButton::clicked, this, &MainWindow::on_button_n2_clicked);
+    QObject::connect(ui->n3_3, &QPushButton::clicked, this, &MainWindow::on_button_n3_clicked);
+    QObject::connect(ui->n4_3, &QPushButton::clicked, this, &MainWindow::on_button_n4_clicked);
+    QObject::connect(ui->n5_3, &QPushButton::clicked, this, &MainWindow::on_button_n5_clicked);
+    QObject::connect(ui->n6_3, &QPushButton::clicked, this, &MainWindow::on_button_n6_clicked);
+    QObject::connect(ui->n7_3, &QPushButton::clicked, this, &MainWindow::on_button_n7_clicked);
+    QObject::connect(ui->n8_3, &QPushButton::clicked, this, &MainWindow::on_button_n8_clicked);
+    QObject::connect(ui->n9_3, &QPushButton::clicked, this, &MainWindow::on_button_n9_clicked);
+    QObject::connect(ui->negate_3, &QPushButton::clicked, this, &MainWindow::on_button_negate_clicked);
+    QObject::connect(ui->subtract_3, &QPushButton::clicked, this, &MainWindow::on_button_subtract_clicked);
+
+    QObject::connect(ui->memory_add_3, &QPushButton::clicked, this, &MainWindow::on_button_memory_add_clicked);
+    QObject::connect(ui->memory_clear_3, &QPushButton::clicked, this, &MainWindow::on_button_memory_clear_clicked);
+    QObject::connect(ui->memory_recall_3, &QPushButton::clicked, this, &MainWindow::on_button_memory_recall_clicked);
+    QObject::connect(ui->memory_subtract_3, &QPushButton::clicked, this, &MainWindow::on_button_memory_subtract_clicked);
+    QObject::connect(ui->parentheses_left_3, &QPushButton::clicked, this, &MainWindow::on_button_parentheses_left_clicked);
+    QObject::connect(ui->parentheses_right_3, &QPushButton::clicked, this, &MainWindow::on_button_parentheses_right_clicked);
+
+    QObject::connect(ui->ascii, &QPushButton::clicked, this, &MainWindow::on_button_ascii_clicked);
+    QObject::connect(ui->base_bin, &QPushButton::clicked, this, &MainWindow::on_button_base_bin_clicked);
+    QObject::connect(ui->base_dec, &QPushButton::clicked, this, &MainWindow::on_button_base_dec_clicked);
+    QObject::connect(ui->base_hex, &QPushButton::clicked, this, &MainWindow::on_button_base_hex_clicked);
+    QObject::connect(ui->base_oct, &QPushButton::clicked, this, &MainWindow::on_button_base_oct_clicked);
+    QObject::connect(ui->bit_rotate_left, &QPushButton::clicked, this, &MainWindow::on_button_bit_rotate_left_clicked);
+    QObject::connect(ui->bit_rotate_right, &QPushButton::clicked, this, &MainWindow::on_button_bit_rotate_right_clicked);
+    QObject::connect(ui->bit_shift_left, &QPushButton::clicked, this, &MainWindow::on_button_bit_shift_left_clicked);
+    QObject::connect(ui->bit_shift_right, &QPushButton::clicked, this, &MainWindow::on_button_bit_shift_right_clicked);
+    QObject::connect(ui->bitwise_and, &QPushButton::clicked, this, &MainWindow::on_button_bitwise_and_clicked);
+    QObject::connect(ui->bitwise_not, &QPushButton::clicked, this, &MainWindow::on_button_bitwise_not_clicked);
+    QObject::connect(ui->bitwise_or, &QPushButton::clicked, this, &MainWindow::on_button_bitwise_or_clicked);
+    QObject::connect(ui->bitwise_xor, &QPushButton::clicked, this, &MainWindow::on_button_bitwise_xor_clicked);
+    QObject::connect(ui->conv, &QPushButton::clicked, this, &MainWindow::on_button_conv_clicked);
+    QObject::connect(ui->modulus_2, &QPushButton::clicked, this, &MainWindow::on_button_modulus_2_clicked);
+    QObject::connect(ui->unicode, &QPushButton::clicked, this, &MainWindow::on_button_unicode_clicked);
+    QObject::connect(ui->i_a, &QPushButton::clicked, this, &MainWindow::on_button_i_a_clicked);
+    QObject::connect(ui->i_b, &QPushButton::clicked, this, &MainWindow::on_button_i_b_clicked);
+    QObject::connect(ui->i_c, &QPushButton::clicked, this, &MainWindow::on_button_i_c_clicked);
+    QObject::connect(ui->i_d, &QPushButton::clicked, this, &MainWindow::on_button_i_d_clicked);
+    QObject::connect(ui->i_e, &QPushButton::clicked, this, &MainWindow::on_button_i_e_clicked);
+    QObject::connect(ui->i_f, &QPushButton::clicked, this, &MainWindow::on_button_i_f_clicked);
+
+    QObject::connect(ui->wordlen_word, &QRadioButton::toggled, this, &MainWindow::on_wordlen_toggled);
+    QObject::connect(ui->wordlen_dword, &QRadioButton::toggled, this, &MainWindow::on_wordlen_toggled);
+    QObject::connect(ui->wordlen_qword, &QRadioButton::toggled, this, &MainWindow::on_wordlen_toggled);
+    QObject::connect(ui->wordlen_byte, &QRadioButton::toggled, this, &MainWindow::on_wordlen_toggled);
+
 }
 
 MainWindow::~MainWindow()
@@ -158,7 +254,8 @@ void MainWindow::on_actionAbout_triggered()
 
 // Functions to handle the Calculator Buttons' input
 
-// Buttons in Scientific View
+// Buttons in all Views
+
 void MainWindow::on_button_ac_clicked() {
     // DEBUG: qDebug() << "Button clicked!";
 }
@@ -200,6 +297,21 @@ void MainWindow::on_button_negate_clicked() {
 }
 void MainWindow::on_button_subtract_clicked() {
 }
+
+void MainWindow::on_button_memory_add_clicked() {
+}
+void MainWindow::on_button_memory_clear_clicked() {
+}
+void MainWindow::on_button_memory_recall_clicked() {
+}
+void MainWindow::on_button_memory_subtract_clicked() {
+}
+void MainWindow::on_button_parentheses_left_clicked() {
+}
+void MainWindow::on_button_parentheses_right_clicked() {
+}
+
+// Buttons only in Scientific View
 
 void MainWindow::on_angleUnitSelection_activated(int i) {
     // TODO: add angle unit selection logic here
@@ -250,19 +362,7 @@ void MainWindow::on_button_logarithm_common_clicked() {
 }
 void MainWindow::on_button_logarithm_natural_clicked() {
 }
-void MainWindow::on_button_memory_add_clicked() {
-}
-void MainWindow::on_button_memory_clear_clicked() {
-}
-void MainWindow::on_button_memory_recall_clicked() {
-}
-void MainWindow::on_button_memory_subtract_clicked() {
-}
 void MainWindow::on_button_modulus_clicked() {
-}
-void MainWindow::on_button_parentheses_left_clicked() {
-}
-void MainWindow::on_button_parentheses_right_clicked() {
 }
 void MainWindow::on_button_percent_clicked() {
 }
@@ -281,4 +381,60 @@ void MainWindow::on_button_tangent_clicked() {
 void MainWindow::on_button_x_th_root_clicked() {
 }
 
-// TODO: Add Basic and Programmer View buttons (and function calls to their logic) here
+// Buttons only in Programmer View
+
+void MainWindow::on_button_ascii_clicked() {
+}
+void MainWindow::on_button_base_bin_clicked() {
+}
+void MainWindow::on_button_base_dec_clicked() {
+}
+void MainWindow::on_button_base_hex_clicked() {
+}
+void MainWindow::on_button_base_oct_clicked() {
+}
+void MainWindow::on_button_bit_rotate_left_clicked() {
+}
+void MainWindow::on_button_bit_rotate_right_clicked() {
+}
+void MainWindow::on_button_bit_shift_left_clicked() {
+}
+void MainWindow::on_button_bit_shift_right_clicked() {
+}
+void MainWindow::on_button_bitwise_and_clicked() {
+}
+void MainWindow::on_button_bitwise_not_clicked() {
+}
+void MainWindow::on_button_bitwise_or_clicked() {
+}
+void MainWindow::on_button_bitwise_xor_clicked() {
+}
+void MainWindow::on_button_conv_clicked() {
+}
+void MainWindow::on_button_modulus_2_clicked() {
+}
+void MainWindow::on_button_unicode_clicked() {
+}
+void MainWindow::on_button_i_a_clicked() {
+}
+void MainWindow::on_button_i_b_clicked() {
+}
+void MainWindow::on_button_i_c_clicked() {
+}
+void MainWindow::on_button_i_d_clicked() {
+}
+void MainWindow::on_button_i_e_clicked() {
+}
+void MainWindow::on_button_i_f_clicked() {
+}
+
+void MainWindow::on_wordlen_toggled() {
+    // TODO: add Word length selection logic here
+    /*
+        if:
+        wordlen_word->isChecked(): Word length is WORD, 16 bits
+        wordlen_dword->isChecked(): Word length is DWORD, 32 bits
+        wordlen_qword->isChecked(): Word length is QWORD, 64 bits
+        wordlen_byte->isChecked(): Word length is BYTE, 8 bits
+    */
+}

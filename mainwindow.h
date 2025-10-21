@@ -37,7 +37,7 @@ private slots:
 
     // Declare slot functions for Calculator Buttons
     
-    // Buttons In Scientific Layout
+    // Buttons in all Views
 
     void on_button_ac_clicked();
     void on_button_add_clicked();
@@ -59,6 +59,15 @@ private slots:
     void on_button_n9_clicked();
     void on_button_negate_clicked();
     void on_button_subtract_clicked();
+
+    void on_button_memory_add_clicked();
+    void on_button_memory_clear_clicked();
+    void on_button_memory_recall_clicked();
+    void on_button_memory_subtract_clicked();
+    void on_button_parentheses_left_clicked();
+    void on_button_parentheses_right_clicked();
+
+    // Buttons in Scientific View (some of which are in Basic View)
 
     void on_angleUnitSelection_activated(int i);
 
@@ -82,13 +91,7 @@ private slots:
     void on_button_inverse_tangent_clicked();
     void on_button_logarithm_common_clicked();
     void on_button_logarithm_natural_clicked();
-    void on_button_memory_add_clicked();
-    void on_button_memory_clear_clicked();
-    void on_button_memory_recall_clicked();
-    void on_button_memory_subtract_clicked();
     void on_button_modulus_clicked();
-    void on_button_parentheses_left_clicked();
-    void on_button_parentheses_right_clicked();
     void on_button_percent_clicked();
     void on_button_random_number_clicked();
     void on_button_reciprocal_clicked();
@@ -98,7 +101,32 @@ private slots:
     void on_button_tangent_clicked();
     void on_button_x_th_root_clicked();
 
-    // TODO: Add angle selection actions
+    // Buttons in Programmer View
+
+    void on_button_ascii_clicked();
+    void on_button_base_bin_clicked();
+    void on_button_base_dec_clicked();
+    void on_button_base_hex_clicked();
+    void on_button_base_oct_clicked();
+    void on_button_bit_rotate_left_clicked();
+    void on_button_bit_rotate_right_clicked();
+    void on_button_bit_shift_left_clicked();
+    void on_button_bit_shift_right_clicked();
+    void on_button_bitwise_and_clicked();
+    void on_button_bitwise_not_clicked();
+    void on_button_bitwise_or_clicked();
+    void on_button_bitwise_xor_clicked();
+    void on_button_conv_clicked();
+    void on_button_modulus_2_clicked();
+    void on_button_unicode_clicked();
+    void on_button_i_a_clicked();
+    void on_button_i_b_clicked();
+    void on_button_i_c_clicked();
+    void on_button_i_d_clicked();
+    void on_button_i_e_clicked();
+    void on_button_i_f_clicked();
+
+    void on_wordlen_toggled();
 
 private:
     Ui::MainWindow *ui;
