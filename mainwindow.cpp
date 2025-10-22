@@ -8,6 +8,26 @@
 #include "help.h" // Include header for Help form
 #include "about.h" // Include header for About form
 
+#include <gmp.h> // to handle the Arithmetic
+
+#include <string> // Some other helpful dependencies
+#include <vector>
+
+// Initialize important variables globally
+std::vector<std::string> equation_buffer;
+std::vector<std::string> numeric_input_buffer;
+bool dp_used = false;
+bool number_is_negative = false;
+
+// DEBUG: output numeric input buffer and equation
+void input_dbg() {
+    qDebug() << "Numeric Input Buffer: ";
+    for (std::string c : numeric_input_buffer) {
+        qDebug() << c << " ";
+    }
+    qDebug() << "\n";
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -257,45 +277,101 @@ void MainWindow::on_actionAbout_triggered()
 // Buttons in all Views
 
 void MainWindow::on_button_ac_clicked() {
-    // DEBUG: qDebug() << "Button clicked!";
+    numeric_input_buffer = {};
+    equation_buffer = {};
+    dp_used = false;
+    input_dbg();
 }
 void MainWindow::on_button_add_clicked() {
+    // TODO: Add logic for appending numeric_input_buffer contents to equation
+    //       and clearing numeric_input_buffer here
+    dp_used = false;
 }
 void MainWindow::on_button_ans_clicked() {
 }
 void MainWindow::on_button_backspace_clicked() {
+    std::string last = numeric_input_buffer.back();
+    numeric_input_buffer.pop_back();
+    if (last == ".") {
+        dp_used = false;
+    }
+    input_dbg();
 }
 void MainWindow::on_button_decimal_point_clicked() {
+    if (dp_used == false) { 
+        numeric_input_buffer.push_back(".");
+        dp_used = true;
+    }
+    input_dbg();
 }
 void MainWindow::on_button_divide_clicked() {
+    // TODO: Add logic for appending numeric_input_buffer contents to equation
+    //       and clearing numeric_input_buffer here
+    dp_used = false;
 }
 void MainWindow::on_button_equals_clicked() {
+    // TODO: Execute the equation
 }
 void MainWindow::on_button_multiply_clicked() {
+    // TODO: Add logic for appending numeric_input_buffer contents to equation
+    //       and clearing numeric_input_buffer here
+    dp_used = false;
 }
 void MainWindow::on_button_n0_clicked() {
+    numeric_input_buffer.push_back("0");
+    input_dbg();
 }
 void MainWindow::on_button_n1_clicked() {
+    numeric_input_buffer.push_back("1");
+    input_dbg();
 }
 void MainWindow::on_button_n2_clicked() {
+    numeric_input_buffer.push_back("2");
+    input_dbg();
 }
 void MainWindow::on_button_n3_clicked() {
+    numeric_input_buffer.push_back("3");
+    input_dbg();
 }
 void MainWindow::on_button_n4_clicked() {
+    numeric_input_buffer.push_back("4");
+    input_dbg();
 }
 void MainWindow::on_button_n5_clicked() {
+    numeric_input_buffer.push_back("5");
+    input_dbg();
 }
 void MainWindow::on_button_n6_clicked() {
+    numeric_input_buffer.push_back("6");
+    input_dbg();
 }
 void MainWindow::on_button_n7_clicked() {
+    numeric_input_buffer.push_back("7");
+    input_dbg();
 }
 void MainWindow::on_button_n8_clicked() {
+    numeric_input_buffer.push_back("8");
+    input_dbg();
 }
 void MainWindow::on_button_n9_clicked() {
+    numeric_input_buffer.push_back("9");
+    input_dbg();
 }
 void MainWindow::on_button_negate_clicked() {
+    if (number_is_negative == false) {
+        numeric_input_buffer.insert(numeric_input_buffer.begin(), "-");
+        number_is_negative = true;
+        input_dbg();
+    } else {
+        numeric_input_buffer.erase(numeric_input_buffer.begin());
+        number_is_negative = false;
+        input_dbg();
+    }
 }
 void MainWindow::on_button_subtract_clicked() {
+    // TODO: Add logic for appending numeric_input_buffer contents to equation
+    //       and clearing numeric_input_buffer here
+    dp_used = false;
 }
 
 void MainWindow::on_button_memory_add_clicked() {
@@ -438,3 +514,6 @@ void MainWindow::on_wordlen_toggled() {
         wordlen_byte->isChecked(): Word length is BYTE, 8 bits
     */
 }
+
+// THIS IS THE ACTUAL ARITHMETIC HANDLING PART OF THE NUMERIC ENGINE
+// or maybe not...
