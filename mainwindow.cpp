@@ -381,12 +381,6 @@ void MainWindow::on_button_n1_clicked() {
     input_dbg();
 }
 void MainWindow::on_button_n2_clicked() {
-    if (new_number) {
-        numeric_input_buffer = {};
-        new_number = false;
-    }
-    numeric_input_buffer.push_back("2");
-    input_dbg();
 }
 void MainWindow::on_button_n3_clicked() {
     if (new_number) {
