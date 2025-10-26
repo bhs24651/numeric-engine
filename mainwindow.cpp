@@ -16,14 +16,16 @@
 // Initialize important variables globally
 std::vector<std::string> equation_buffer;
 std::vector<std::string> equation_display;
-std::vector<std::string> numeric_input_buffer;
+std::vector<std::string> numeric_input_buffer = {"0"};
 bool dp_used = false;
 bool number_is_negative = false;
 bool new_number = true;
+bool minus_zero = false;
 
 // Define important functions
 std::string concat_numeric_input_buffer_content() {
     std::string output = "";
+    output += number_is_negative ? "-" : "";
     for (std::string c : numeric_input_buffer) {
         output += c;
     }
@@ -299,18 +301,24 @@ void MainWindow::on_button_ac_clicked() {
     numeric_input_buffer = {"0"};
     equation_buffer = {};
     dp_used = false;
+    number_is_negative = false;
     new_number = true;
     input_dbg();
 }
 void MainWindow::on_button_add_clicked() {
     // logic for appending numeric_input_buffer contents to equation
     // and clearing numeric_input_buffer
+    equation_buffer.push_back(number_is_negative ? "(" : "");
+    equation_buffer.push_back(number_is_negative ? "-" : "");
     for (std::string c : numeric_input_buffer) {
         equation_buffer.push_back(c);
     }
+    equation_buffer.push_back(number_is_negative ? ")" : "");
     equation_buffer.push_back("+");
     dp_used = false;
     new_number = true;
+    // function to update display should be placed here, right after this comment
+    number_is_negative = false;
     input_dbg();
 }
 void MainWindow::on_button_ans_clicked() {
@@ -321,8 +329,15 @@ void MainWindow::on_button_backspace_clicked() {
     if (last == ".") {
         dp_used = false;
     }
+    if (minus_zero) {
+        number_is_negative = false;
+        minus_zero = false;
+    }
     if (numeric_input_buffer.empty()) {
         numeric_input_buffer = {"0"};
+        if (number_is_negative) {
+            minus_zero = true;
+        }
         new_number = true;
     }
     input_dbg();
@@ -342,12 +357,17 @@ void MainWindow::on_button_decimal_point_clicked() {
 void MainWindow::on_button_divide_clicked() {
     // logic for appending numeric_input_buffer contents to equation
     // and clearing numeric_input_buffer
+    equation_buffer.push_back(number_is_negative ? "(" : "");
+    equation_buffer.push_back(number_is_negative ? "-" : "");
     for (std::string c : numeric_input_buffer) {
         equation_buffer.push_back(c);
     }
+    equation_buffer.push_back(number_is_negative ? ")" : "");
     equation_buffer.push_back("/");
     dp_used = false;
     new_number = true;
+    // function to update display should be placed here, right after this comment
+    number_is_negative = false;
     input_dbg();
 }
 void MainWindow::on_button_equals_clicked() {
@@ -356,18 +376,23 @@ void MainWindow::on_button_equals_clicked() {
 void MainWindow::on_button_multiply_clicked() {
     // logic for appending numeric_input_buffer contents to equation
     // and clearing numeric_input_buffer
+    equation_buffer.push_back(number_is_negative ? "(" : "");
+    equation_buffer.push_back(number_is_negative ? "-" : "");
     for (std::string c : numeric_input_buffer) {
         equation_buffer.push_back(c);
     }
+    equation_buffer.push_back(number_is_negative ? ")" : "");
     equation_buffer.push_back("*");
     dp_used = false;
     new_number = true;
+    // function to update display should be placed here, right after this comment
+    number_is_negative = false;
     input_dbg();
 }
 void MainWindow::on_button_n0_clicked() {
     if (new_number) {
         numeric_input_buffer = {};
-        new_number = false;
+        new_number = true;
     }
     numeric_input_buffer.push_back("0");
     input_dbg();
@@ -381,6 +406,12 @@ void MainWindow::on_button_n1_clicked() {
     input_dbg();
 }
 void MainWindow::on_button_n2_clicked() {
+    if (new_number) {
+        numeric_input_buffer = {};
+        new_number = false;
+    }
+    numeric_input_buffer.push_back("2");
+    input_dbg();
 }
 void MainWindow::on_button_n3_clicked() {
     if (new_number) {
@@ -440,11 +471,11 @@ void MainWindow::on_button_n9_clicked() {
 }
 void MainWindow::on_button_negate_clicked() {
     if (number_is_negative == false) {
-        numeric_input_buffer.insert(numeric_input_buffer.begin(), "-");
+        // numeric_input_buffer.insert(numeric_input_buffer.begin(), "-");
         number_is_negative = true;
         input_dbg();
     } else {
-        numeric_input_buffer.erase(numeric_input_buffer.begin());
+        // numeric_input_buffer.erase(numeric_input_buffer.begin());
         number_is_negative = false;
         input_dbg();
     }
@@ -452,12 +483,17 @@ void MainWindow::on_button_negate_clicked() {
 void MainWindow::on_button_subtract_clicked() {
     // logic for appending numeric_input_buffer contents to equation
     // and clearing numeric_input_buffer
+    equation_buffer.push_back(number_is_negative ? "(" : "");
+    equation_buffer.push_back(number_is_negative ? "-" : "");
     for (std::string c : numeric_input_buffer) {
         equation_buffer.push_back(c);
     }
+    equation_buffer.push_back(number_is_negative ? ")" : "");
     equation_buffer.push_back("-");
     dp_used = false;
     new_number = true;
+    // function to update display should be placed here, right after this comment
+    number_is_negative = false;
     input_dbg();
 }
 
