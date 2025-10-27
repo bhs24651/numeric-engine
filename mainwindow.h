@@ -128,6 +128,12 @@ private slots:
 
     void on_wordlen_toggled();
 
+    // Slots for Other functions
+
+    void updateDisplay();
+    void appendDigit(const std::string& digit);
+    void appendOperator(const std::string& op);
+
 private:
     Ui::MainWindow *ui;
 };
