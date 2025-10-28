@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 #include <QDebug> // for outputting debug messages
@@ -9,6 +9,7 @@
 #include "about.h" // Include header for About form
 
 #include <gmp.h> // to handle the Arithmetic
+#include <gmpxx.h>   // <-- add (C++ API; keep <gmp.h> or remove if unused)
 
 #include <string> // Some other helpful dependencies
 #include <vector>
@@ -16,7 +17,7 @@
 // Initialize important variables globally
 std::vector<std::string> equation_buffer;
 std::vector<std::string> equation_display;
-std::vector<std::string> numeric_input_buffer = {"0"};
+std::vector<std::string> numeric_input_buffer = { "0" };
 std::string equation = "";
 bool dp_used = false;
 bool number_is_negative = false;
@@ -42,26 +43,261 @@ std::string concat_equation_buffer_content() {
     return output;
 }
 
-void MainWindow::updateDisplay() {
-    // Combine the equation buffer and current numeric input to show in the UI
-    std::string eq = concat_equation_buffer_content();
-    std::string current = concat_numeric_input_buffer_content();
-
-    // std::string display_str = eq + current;
-    ui->answerInputLabel->setText(QString::fromStdString(current));
-    ui->equationLabel->setText(QString::fromStdString(eq));
-}
-
 // DEBUG: output numeric input buffer and equation buffer
 void input_dbg() {
     qDebug() << "Numeric Input Buffer: ";
-    qDebug() << concat_numeric_input_buffer_content();
+    qDebug() << QString::fromStdString(concat_numeric_input_buffer_content());  // <-- convert
     qDebug() << "Equation Buffer: ";
-    qDebug() << concat_equation_buffer_content();
+    qDebug() << QString::fromStdString(concat_equation_buffer_content());       // <-- convert
     qDebug() << "\n";
 }
 
-MainWindow::MainWindow(QWidget *parent)
+// ===== Postfix (RPN) evaluator with GMP =====
+typedef mpf_class BigFloat;
+
+static bool g_eval_div0 = false;
+
+// Tokenize into numbers, operators, parentheses, with unary minus as "u-"
+static std::vector<std::string> tokenizeInfix(const std::string& s) {
+    std::vector<std::string> out;
+    auto isop = [](char c) { return c == '+' || c == '-' || c == '*' || c == '/'; };
+    const size_t n = s.size();
+    for (size_t i = 0; i < n; ++i) {
+        char c = s[i];
+        if (std::isspace(static_cast<unsigned char>(c))) continue;
+        if (std::isdigit(static_cast<unsigned char>(c)) || c == '.') {
+            std::string num;
+            while (i < n && (std::isdigit(static_cast<unsigned char>(s[i])) || s[i] == '.')) num += s[i++];
+            --i; out.push_back(num);
+        }
+        else if (c == '(' || c == ')') {
+            out.emplace_back(1, c);
+        }
+        else if (isop(c)) {
+            bool unary = false;
+            if (c == '-') {
+                if (out.empty()) unary = true;
+                else {
+                    const std::string& prev = out.back();
+                    if (prev == "(" || prev == "+" || prev == "-" || prev == "*" || prev == "/") unary = true;
+                }
+            }
+            if (unary) out.push_back("u-"); else out.emplace_back(1, c);
+        }
+    }
+    return out;
+}
+
+static int prec(const std::string& op) {
+    if (op == "u-") return 3; // unary minus highest
+    if (op == "*" || op == "/") return 2;
+    if (op == "+" || op == "-") return 1;
+    return 0;
+}
+static bool isOp(const std::string& t) { return t == "+" || t == "-" || t == "*" || t == "/" || t == "u-"; }
+
+static std::vector<std::string> infixToPostfix(const std::vector<std::string>& toks) {
+    std::vector<std::string> out; out.reserve(toks.size());
+    std::vector<std::string> st;
+    for (const auto& t : toks) {
+        if (isOp(t)) {
+            while (!st.empty() && isOp(st.back()) && ((prec(st.back()) > prec(t)) || (prec(st.back()) == prec(t) && t != "u-"))) {
+                out.push_back(st.back()); st.pop_back();
+            }
+            st.push_back(t);
+        }
+        else if (t == "(") {
+            st.push_back(t);
+        }
+        else if (t == ")") {
+            while (!st.empty() && st.back() != "(") { out.push_back(st.back()); st.pop_back(); }
+            if (!st.empty() && st.back() == "(") st.pop_back();
+        }
+        else {
+            out.push_back(t);
+        }
+    }
+    while (!st.empty()) { if (st.back() != "(") out.push_back(st.back()); st.pop_back(); }
+    return out;
+}
+
+static BigFloat toBig(const std::string& s) { BigFloat v(s); return v; }
+static BigFloat evalPostfix(const std::vector<std::string>& rpn) {
+    std::vector<BigFloat> st;
+    for (const auto& t : rpn) {
+        if (!isOp(t)) { st.push_back(toBig(t)); continue; }
+        if (t == "u-") {
+            if (st.empty()) return BigFloat(0);
+            BigFloat a = st.back(); st.pop_back(); st.push_back(-a); continue;
+        }
+        if (st.size() < 2) return BigFloat(0);
+        BigFloat b = st.back(); st.pop_back();
+        BigFloat a = st.back(); st.pop_back();
+        if (t == "+") st.push_back(a + b);
+        else if (t == "-") st.push_back(a - b);
+        else if (t == "*") st.push_back(a * b);
+        else if (t == "/") {
+            if (b == 0) { g_eval_div0 = true; st.push_back(BigFloat(0)); } // do not attempt inf/NaN
+            else st.push_back(a / b);
+        }
+    }
+    return st.empty() ? BigFloat(0) : st.back();
+}
+
+static BigFloat evaluateFromInfix(const std::string& expr) {
+    g_eval_div0 = false;
+    auto toks = tokenizeInfix(expr);
+    auto rpn = infixToPostfix(toks);
+    return evalPostfix(rpn);
+}
+
+// GMP string formatter (no iostream precision quirks)
+static std::string mpf_to_string(const mpf_class& x, size_t digits = 34) {
+    mp_exp_t exp = 0;                          // digits before decimal
+    std::string mant = x.get_str(exp, 10, digits);
+
+    bool neg = (!mant.empty() && mant[0] == '-');
+    if (neg) mant.erase(mant.begin());
+    if (mant.empty()) return "0";
+
+    std::string s;
+    if (exp <= 0) {
+        if (neg) s.push_back('-');
+        s += "0.";
+        s.append(static_cast<size_t>(-exp), '0');
+        s += mant;
+    }
+    else if (static_cast<size_t>(exp) >= mant.size()) {
+        if (neg) s.push_back('-');
+        s += mant;
+        s.append(static_cast<size_t>(exp) - mant.size(), '0');
+    }
+    else {
+        if (neg) s.push_back('-');
+        s.append(mant, 0, static_cast<size_t>(exp));
+        s.push_back('.');
+        s.append(mant, static_cast<size_t>(exp), std::string::npos);
+    }
+    if (auto p = s.find('.'); p != std::string::npos) {
+        while (!s.empty() && s.back() == '0') s.pop_back();
+        if (!s.empty() && s.back() == '.') s.pop_back();
+    }
+    return s.empty() ? "0" : s;
+}
+
+static std::string stripTrailingOperator(const std::string& s) {
+    if (s.empty()) return s;
+    size_t i = s.size();
+    while (i > 0 && std::isspace(static_cast<unsigned char>(s[i - 1]))) --i;
+    if (i == 0) return "";
+    char c = s[i - 1];
+    if (c == '+' || c == '-' || c == '*' || c == '/') return s.substr(0, i - 1);
+    return s;
+}
+// ===== end RPN evaluator =====
+
+// ===== Pretty-printing the equation (display only) =====
+
+// Merge consecutive digit/decimal tokens into a single number token.
+static std::vector<std::string> coalesceNumbers(const std::vector<std::string>& raw) {
+    std::vector<std::string> out;
+    std::string acc;
+    auto flush_acc = [&]() { if (!acc.empty()) { out.push_back(acc); acc.clear(); } };
+
+    for (const auto& t : raw) {
+        bool isDigit = (t.size() == 1) && (std::isdigit(static_cast<unsigned char>(t[0])) || t == ".");
+        if (isDigit) {
+            acc += t;
+        }
+        else {
+            flush_acc();
+            out.push_back(t);
+        }
+    }
+    flush_acc();
+    return out;
+}
+
+static inline bool isBinaryOpTok(const std::string& t) {
+    return t == "+" || t == "-" || t == "*" || t == "/";
+}
+
+static bool isUnaryMinusAt(const std::vector<std::string>& toks, size_t i) {
+    if (toks[i] != "-") return false;
+    if (i == 0) return true;
+    const std::string& prev = toks[i - 1];
+    // If previous is an opening paren or an operator, this '-' is unary
+    return (prev == "(" || isBinaryOpTok(prev));
+}
+
+static QString pretty_equation_from_tokens(const std::vector<std::string>& raw) {
+    const auto toks = coalesceNumbers(raw);
+    QString out;
+
+    auto lastChar = [&]() -> QChar {
+        if (out.isEmpty()) return QChar();
+        return out.at(out.size() - 1);
+        };
+
+    for (size_t i = 0; i < toks.size(); ++i) {
+        const std::string& t = toks[i];
+
+        // Parentheses: no extra spaces next to them
+        if (t == "(") {
+            // If previous token was a value or ')', you *might* want a space (optional)
+            // We keep it tight for a classic calculator look.
+            out += "(";
+            continue;
+        }
+        if (t == ")") {
+            out += ")";
+            continue;
+        }
+
+        // Operators
+        if (isBinaryOpTok(t)) {
+            // Unary minus stays tight (e.g., 1 * -(2) or (-3))
+            if (t == "-" && isUnaryMinusAt(toks, i)) {
+                out += "-";
+                continue;
+            }
+
+            // Binary operator: add spaces around
+            QString sym;
+            if (t == "*")      sym = QStringLiteral("×");
+            else if (t == "/") sym = QStringLiteral("÷");
+            else               sym = QString::fromStdString(t);
+
+            // no space just after '('
+            if (lastChar() != '(' && lastChar() != QChar(' ') && !out.isEmpty())
+                out += " ";
+            out += sym;
+            // no space just before ')'
+            if (i + 1 < toks.size() && toks[i + 1] != ")")
+                out += " ";
+            continue;
+        }
+
+        // Number or any other literal token
+        out += QString::fromStdString(t);
+    }
+
+    return out;
+}
+
+void MainWindow::updateDisplay() {
+    std::string eq = concat_equation_buffer_content();
+    std::string current = concat_numeric_input_buffer_content();
+
+    ui->answerInputLabel->setText(QString::fromStdString(current));
+    // OLD:
+    // ui->equationLabel->setText(QString::fromStdString(eq));
+
+    // NEW (beautified):
+    ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+}
+
+MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
@@ -180,7 +416,7 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(ui->parentheses_left_2, &QPushButton::clicked, this, &MainWindow::on_button_parentheses_left_clicked);
     QObject::connect(ui->parentheses_right_2, &QPushButton::clicked, this, &MainWindow::on_button_parentheses_right_clicked);
 
-    QObject::connect(ui->absolute_value_2, & QPushButton::clicked, this, &MainWindow::on_button_absolute_value_clicked);
+    QObject::connect(ui->absolute_value_2, &QPushButton::clicked, this, &MainWindow::on_button_absolute_value_clicked);
     QObject::connect(ui->exponential_2, &QPushButton::clicked, this, &MainWindow::on_button_exponential_clicked);
     QObject::connect(ui->reciprocal_2, &QPushButton::clicked, this, &MainWindow::on_button_reciprocal_clicked);
     QObject::connect(ui->square_2, &QPushButton::clicked, this, &MainWindow::on_button_square_clicked);
@@ -188,7 +424,7 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(ui->x_th_root_2, &QPushButton::clicked, this, &MainWindow::on_button_x_th_root_clicked);
 
     // Programmer View
-    
+
     QObject::connect(ui->ac_3, &QPushButton::clicked, this, &MainWindow::on_button_ac_clicked);
     QObject::connect(ui->add_3, &QPushButton::clicked, this, &MainWindow::on_button_add_clicked);
     QObject::connect(ui->ans_3, &QPushButton::clicked, this, &MainWindow::on_button_ans_clicked);
@@ -275,7 +511,7 @@ void MainWindow::on_actionProgrammer_triggered()
 void MainWindow::openConverter()
 {
     // Create an instance of the Converter form
-    converter* converter_form = new converter(this); 
+    converter* converter_form = new converter(this);
     // ... and show it on screen
     converter_form->show();
 }
@@ -357,22 +593,44 @@ void MainWindow::on_button_n7_clicked() { appendDigit("7"); }
 void MainWindow::on_button_n8_clicked() { appendDigit("8"); }
 void MainWindow::on_button_n9_clicked() { appendDigit("9"); }
 
+static inline bool isOpToken(const std::string& t) {
+    return t == "+" || t == "-" || t == "*" || t == "/";
+}
+
 void MainWindow::appendOperator(const std::string& op) {
-    // Push the current number into the equation
+    auto isOpToken = [](const std::string& t) { return t == "+" || t == "-" || t == "*" || t == "/"; };
+
+
+    // If buffer is empty and user presses an operator after AC, treat as 0 <op>
+    if (equation_buffer.empty() && new_number) {
+        equation_buffer.push_back("0");
+    }
+
+
+    // Commit current number if present
     if (!new_number) {
         if (number_is_negative) equation_buffer.push_back("(");
         if (number_is_negative) equation_buffer.push_back("-");
-        for (std::string c : numeric_input_buffer) equation_buffer.push_back(c);
+        for (const std::string& c : numeric_input_buffer) equation_buffer.push_back(c);
         if (number_is_negative) equation_buffer.push_back(")");
     }
+
+
+    // Collapse any trailing operators; keep only the last one pressed
+    while (!equation_buffer.empty() && isOpToken(equation_buffer.back())) {
+        equation_buffer.pop_back();
+    }
+
 
     // Add operator
     equation_buffer.push_back(op);
 
-    // Reset state for next input
+
+    // Reset for next input
     dp_used = false;
     new_number = true;
     number_is_negative = false;
+
 
     updateDisplay();
 }
@@ -403,26 +661,60 @@ void MainWindow::on_button_ans_clicked() {
 }
 
 void MainWindow::on_button_equals_clicked() {
-    // Append current input
-    for (std::string c : numeric_input_buffer)
-        equation_buffer.push_back(c);
+    // --- 1) Build token list for both display and evaluation ---
+    std::vector<std::string> eval_tokens = equation_buffer;
 
-    std::string final_eq = concat_equation_buffer_content();
-    qDebug() << "Equation to evaluate: " << QString::fromStdString(final_eq);
+    // Commit current input (wrap negatives the same way you do elsewhere)
+    if (!new_number) {
+        if (number_is_negative) { eval_tokens.push_back("("); eval_tokens.push_back("-"); }
+        for (const auto& c : numeric_input_buffer) eval_tokens.push_back(c);
+        if (number_is_negative) eval_tokens.push_back(")");
+    }
 
-    // TODO: Replace with actual evaluation logic
-    std::string result = "0";  // placeholder for GMP-based arithmetic result
+    // Auto-close open parens
+    for (int i = 0; i < open_parens; ++i) eval_tokens.push_back(")");
+
+    // Strip any trailing operator (token-based)
+    auto isOpToken = [](const std::string& t) { return t == "+" || t == "-" || t == "*" || t == "/"; };
+    if (!eval_tokens.empty() && isOpToken(eval_tokens.back())) {
+        eval_tokens.pop_back();
+    }
+
+    // If nothing left, just use the current input as the whole expression
+    if (eval_tokens.empty()) {
+        // reflect current input only
+        eval_tokens.clear();
+        if (number_is_negative) { eval_tokens.push_back("("); eval_tokens.push_back("-"); }
+        for (const auto& c : numeric_input_buffer) eval_tokens.push_back(c);
+        if (number_is_negative) eval_tokens.push_back(")");
+    }
+
+    // --- 2) Show the BEAUTIFIED equation BEFORE evaluation ---
+    // Use your pretty-printer on the token vector
+    ui->equationLabel->setText(pretty_equation_from_tokens(eval_tokens) + " =");
+
+    // --- 3) Concatenate ASCII tokens for the evaluator ---
+    std::string final_eq;
+    final_eq.reserve(eval_tokens.size() * 2);
+    for (const auto& t : eval_tokens) final_eq += t;
+
+    // --- 4) Evaluate (RPN + GMP) ---
+    BigFloat res = evaluateFromInfix(final_eq);
+
+    std::string result;
+    if (g_eval_div0) {
+        result = "Error: Divide by 0";
+    }
+    else {
+        result = mpf_to_string(res, 34); // your GMP-safe formatter
+    }
 
     ui->answerInputLabel->setText(QString::fromStdString(result));
-    ui->equationLabel->setText(QString::fromStdString(final_eq)+"=");
 
-    // Reset for next calculation
+    // --- 5) Prepare next state ---
     equation_buffer.clear();
-    numeric_input_buffer = { result };
-    new_number = true;
-    number_is_negative = false;
-    dp_used = false;
-    open_parens = 0;
+    numeric_input_buffer = { g_eval_div0 ? std::string("0") : result };
+    new_number = true; number_is_negative = false; dp_used = false; open_parens = 0;
 }
 
 void MainWindow::on_button_memory_add_clicked() {
@@ -435,18 +727,46 @@ void MainWindow::on_button_memory_subtract_clicked() {
 }
 
 void MainWindow::on_button_parentheses_left_clicked() {
-    // If a new number is expected, open a new group
-    if (new_number || equation_buffer.empty() || equation_buffer.back() == "(") {
+    auto commit_current_number = [&]() {
+        if (!new_number) {
+            if (number_is_negative) equation_buffer.push_back("(");
+            if (number_is_negative) equation_buffer.push_back("-");
+            for (const std::string& c : numeric_input_buffer) equation_buffer.push_back(c);
+            if (number_is_negative) equation_buffer.push_back(")");
+        }
+        };
+
+    auto push_open = [&]() {
         equation_buffer.push_back("(");
-        open_parens++;
+        ++open_parens;
+        new_number = true; dp_used = false; number_is_negative = false;
+        };
+
+    auto lastChar = [&]() -> char {
+        if (equation_buffer.empty()) return 0;
+        const std::string& s = equation_buffer.back();
+        return s.empty() ? 0 : s.back();
+        };
+
+    // If a number is currently being typed, do implicit multiplication: number * (
+    if (!new_number) {
+        commit_current_number();
+        equation_buffer.push_back("*");   // <- split tokens
+        push_open();                      // pushes "(" and updates state
+        updateDisplay();
+        return;
+    }
+
+    char lc = lastChar();
+    bool afterOpOrStart = (lc == 0 || lc == '(' || lc == '+' || lc == '-' || lc == '*' || lc == '/');
+
+    if (afterOpOrStart) {
+        push_open();
     }
     else {
-        // Implicit multiplication (like "2(")
-        for (std::string c : numeric_input_buffer)
-            equation_buffer.push_back(c);
-        equation_buffer.push_back("*(");
-        open_parens++;
-        new_number = true;
+        // Previous token was a value or ')': implicit multiplication
+        equation_buffer.push_back("*");
+        push_open();
     }
     updateDisplay();
 }
@@ -599,5 +919,4 @@ void MainWindow::on_wordlen_toggled() {
     */
 }
 
-// THIS IS THE ACTUAL ARITHMETIC HANDLING PART OF THE NUMERIC ENGINE
-// or maybe not...
+// why did i make this
