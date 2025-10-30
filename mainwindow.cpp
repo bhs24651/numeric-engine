@@ -15,6 +15,8 @@
 #include <vector>
 
 // Initialize important variables globally
+typedef mpf_class BigFloat;
+
 std::vector<std::string> equation_buffer;
 std::vector<std::string> equation_display;
 std::vector<std::string> numeric_input_buffer = { "0" };
@@ -24,6 +26,10 @@ bool number_is_negative = false;
 bool new_number = true;
 bool minus_zero = false;
 int open_parens = 0;
+bool just_evaluated = false;
+
+BigFloat last_answer = 0;
+BigFloat memory = 0;
 
 // Define important functions
 std::string concat_numeric_input_buffer_content() {
@@ -53,8 +59,6 @@ void input_dbg() {
 }
 
 // ===== Postfix (RPN) evaluator with GMP =====
-typedef mpf_class BigFloat;
-
 static bool g_eval_div0 = false;
 
 // Tokenize into numbers, operators, parentheses, with unary minus as "u-"
@@ -264,7 +268,9 @@ static QString pretty_equation_from_tokens(const std::vector<std::string>& raw) 
 
             // Binary operator: add spaces around
             QString sym;
-            if (t == "*")      sym = QStringLiteral("×");
+            if (t == "+") sym = QStringLiteral("+");
+            else if (t == "-") sym = QStringLiteral("−");
+            else if (t == "*")      sym = QStringLiteral("×");
             else if (t == "/") sym = QStringLiteral("÷");
             else               sym = QString::fromStdString(t);
 
@@ -283,6 +289,30 @@ static QString pretty_equation_from_tokens(const std::vector<std::string>& raw) 
     }
 
     return out;
+}
+
+// Read the current entry (what the user is typing) as BigFloat
+static BigFloat current_entry_to_big() {
+    return BigFloat(concat_numeric_input_buffer_content());
+}
+
+// Load a BigFloat into the entry buffer (respecting sign/decimal flags)
+void MainWindow::load_entry_from_big(const mpf_class& x) {
+    std::string s = mpf_to_string(x, 34);
+    numeric_input_buffer.clear();
+
+    number_is_negative = false;
+    if (!s.empty() && s[0] == '-') {
+        number_is_negative = true;
+        s.erase(s.begin());
+    }
+    dp_used = (s.find('.') != std::string::npos);
+    new_number = false;
+
+    for (char ch : s) {
+        // s now has only digits and optionally one '.'
+        numeric_input_buffer.push_back(std::string(1, ch));
+    }
 }
 
 void MainWindow::updateDisplay() {
@@ -481,6 +511,9 @@ MainWindow::MainWindow(QWidget* parent)
     QObject::connect(ui->wordlen_qword, &QRadioButton::toggled, this, &MainWindow::on_wordlen_toggled);
     QObject::connect(ui->wordlen_byte, &QRadioButton::toggled, this, &MainWindow::on_wordlen_toggled);
 
+    // Disable Memory Clear and Memory Recall buttons at startup
+    ui->memory_clear->setEnabled(false);
+    ui->memory_recall->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
@@ -574,6 +607,12 @@ void MainWindow::appendDigit(const std::string& digit) {
         new_number = false;
     }
 
+    if (just_evaluated) {
+        // Start new expression fresh
+        equation_buffer.clear();
+        just_evaluated = false;
+    }
+
     // Avoid leading zeros unless there's a decimal point
     if (numeric_input_buffer.size() == 1 && numeric_input_buffer[0] == "0" && digit != ".") {
         numeric_input_buffer.clear();
@@ -621,6 +660,12 @@ void MainWindow::appendOperator(const std::string& op) {
         equation_buffer.pop_back();
     }
 
+    if (just_evaluated) {
+        // Automatically use last answer
+        std::string ans_str = mpf_to_string(last_answer, 34);
+        equation_buffer = { ans_str, " " };
+        just_evaluated = false;
+    }
 
     // Add operator
     equation_buffer.push_back(op);
@@ -658,6 +703,9 @@ void MainWindow::on_button_negate_clicked() {
 }
 
 void MainWindow::on_button_ans_clicked() {
+    // Put last_answer into the entry (like most calculators do)
+    load_entry_from_big(last_answer);
+    updateDisplay();
 }
 
 void MainWindow::on_button_equals_clicked() {
@@ -700,10 +748,12 @@ void MainWindow::on_button_equals_clicked() {
 
     // --- 4) Evaluate (RPN + GMP) ---
     BigFloat res = evaluateFromInfix(final_eq);
+    last_answer = res; // store last answer
+    just_evaluated = true;
 
     std::string result;
     if (g_eval_div0) {
-        result = "Error: Divide by 0";
+        result = "undefined";
     }
     else {
         result = mpf_to_string(res, 34); // your GMP-safe formatter
@@ -717,13 +767,33 @@ void MainWindow::on_button_equals_clicked() {
     new_number = true; number_is_negative = false; dp_used = false; open_parens = 0;
 }
 
+
 void MainWindow::on_button_memory_add_clicked() {
+    // M+: memory += current_entry
+    memory += current_entry_to_big();
+    // (Optional) visual cue could be added here if you have a label
+    ui->memory_clear->setEnabled(true);
+    ui->memory_recall->setEnabled(true);
 }
-void MainWindow::on_button_memory_clear_clicked() {
-}
-void MainWindow::on_button_memory_recall_clicked() {
-}
+
 void MainWindow::on_button_memory_subtract_clicked() {
+    // M-: memory -= current_entry
+    memory -= current_entry_to_big();
+    ui->memory_clear->setEnabled(true);
+    ui->memory_recall->setEnabled(true);
+}
+
+void MainWindow::on_button_memory_recall_clicked() {
+    // MR: recall memory into entry
+    load_entry_from_big(memory);
+    updateDisplay();
+}
+
+void MainWindow::on_button_memory_clear_clicked() {
+    // MC: clear memory
+    memory = 0;
+    ui->memory_clear->setEnabled(false);
+    ui->memory_recall->setEnabled(false);
 }
 
 void MainWindow::on_button_parentheses_left_clicked() {

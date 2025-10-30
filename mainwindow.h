@@ -2,10 +2,12 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <gmp.h>
+#include <gmpxx.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
-class MainWindow;
+    class MainWindow;
 }
 QT_END_NAMESPACE
 
@@ -14,7 +16,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
 private slots:
@@ -36,7 +38,7 @@ private slots:
     void on_actionAbout_triggered();
 
     // Declare slot functions for Calculator Buttons
-    
+
     // Buttons in all Views
 
     void on_button_ac_clicked();
@@ -133,8 +135,9 @@ private slots:
     void updateDisplay();
     void appendDigit(const std::string& digit);
     void appendOperator(const std::string& op);
+    void load_entry_from_big(const mpf_class& x);
 
 private:
-    Ui::MainWindow *ui;
+    Ui::MainWindow* ui;
 };
 #endif // MAINWINDOW_H
