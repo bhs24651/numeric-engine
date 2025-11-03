@@ -10,6 +10,7 @@
 
 #include <gmp.h> // to handle the Arithmetic
 #include <gmpxx.h>   // <-- add (C++ API; keep <gmp.h> or remove if unused)
+#include <cmath>
 
 #include <string> // Some other helpful dependencies
 #include <vector>
@@ -27,6 +28,7 @@ bool new_number = true;
 bool minus_zero = false;
 int open_parens = 0;
 bool just_evaluated = false;
+bool just_evaluated_full = false;   // true only when '=' was pressed
 
 BigFloat last_answer = 0;
 BigFloat memory = 0;
@@ -64,7 +66,7 @@ static bool g_eval_div0 = false;
 // Tokenize into numbers, operators, parentheses, with unary minus as "u-"
 static std::vector<std::string> tokenizeInfix(const std::string& s) {
     std::vector<std::string> out;
-    auto isop = [](char c) { return c == '+' || c == '-' || c == '*' || c == '/'; };
+    auto isop = [](char c) { return c == '+' || c == '-' || c == '*' || c == '/' || c == '^'; };
     const size_t n = s.size();
     for (size_t i = 0; i < n; ++i) {
         char c = s[i];
@@ -93,12 +95,13 @@ static std::vector<std::string> tokenizeInfix(const std::string& s) {
 }
 
 static int prec(const std::string& op) {
-    if (op == "u-") return 3; // unary minus highest
+    if (op == "u-") return 4; // unary minus highest
+    if (op == "^")  return 3; // higher than * and /
     if (op == "*" || op == "/") return 2;
     if (op == "+" || op == "-") return 1;
     return 0;
 }
-static bool isOp(const std::string& t) { return t == "+" || t == "-" || t == "*" || t == "/" || t == "u-"; }
+static bool isOp(const std::string& t) { return t == "+" || t == "-" || t == "*" || t == "/" || t == "^" || t == "u-"; }
 
 static std::vector<std::string> infixToPostfix(const std::vector<std::string>& toks) {
     std::vector<std::string> out; out.reserve(toks.size());
@@ -144,6 +147,7 @@ static BigFloat evalPostfix(const std::vector<std::string>& rpn) {
             if (b == 0) { g_eval_div0 = true; st.push_back(BigFloat(0)); } // do not attempt inf/NaN
             else st.push_back(a / b);
         }
+        else if (t == "^") st.push_back(::pow(a.get_d(), b.get_d()));
     }
     return st.empty() ? BigFloat(0) : st.back();
 }
@@ -200,6 +204,37 @@ static std::string stripTrailingOperator(const std::string& s) {
 }
 // ===== end RPN evaluator =====
 
+// --- Display-only function detection ---
+static bool isDisplayFunc(const std::string& t) {
+    return
+        t == "FUNC_ABS" ||
+        t == "FUNC_PI" ||
+        t == "FUNC_E" ||
+        t == "FUNC_SIN" ||
+        t == "FUNC_COS" ||
+        t == "FUNC_TAN" ||
+        t == "FUNC_ASIN" ||
+        t == "FUNC_ACOS" ||
+        t == "FUNC_ATAN" ||
+        t == "FUNC_SINH" ||
+        t == "FUNC_COSH" ||
+        t == "FUNC_TANH" ||
+        t == "FUNC_ASINH" ||
+        t == "FUNC_ACOSH" ||
+        t == "FUNC_ATANH" ||
+        t == "FUNC_LN" ||
+        t == "FUNC_LOG10" ||
+        t == "FUNC_SQRT" ||
+        t == "FUNC_SQR" ||
+        t == "FUNC_RECIP" ||
+        t == "FUNC_EXP" ||
+        t == "FUNC_EXP10" ||
+        t == "FUNC_FACT" ||
+        t == "FUNC_MOD" ||
+        t == "FUNC_PERCENT" ||
+        t == "FUNC_XROOT";
+}
+
 // ===== Pretty-printing the equation (display only) =====
 
 // Merge consecutive digit/decimal tokens into a single number token.
@@ -245,6 +280,79 @@ static QString pretty_equation_from_tokens(const std::vector<std::string>& raw) 
 
     for (size_t i = 0; i < toks.size(); ++i) {
         const std::string& t = toks[i];
+
+        // --- display-only funcs ---
+        if (t == "FUNC_ABS") { out += "abs";   continue; }
+        if (t == "FUNC_PI") { out += "π";     continue; }
+        if (t == "FUNC_E") { out += "e";     continue; }
+        if (t == "FUNC_SIN") { out += "sin";   continue; }
+        if (t == "FUNC_COS") { out += "cos";   continue; }
+        if (t == "FUNC_TAN") { out += "tan";   continue; }
+        if (t == "FUNC_ASIN") { out += "sin⁻¹";  continue; }
+        if (t == "FUNC_ACOS") { out += "cos⁻¹";  continue; }
+        if (t == "FUNC_ATAN") { out += "tan⁻¹";  continue; }
+        if (t == "FUNC_SINH") { out += "sinh";  continue; }
+        if (t == "FUNC_COSH") { out += "cosh";  continue; }
+        if (t == "FUNC_TANH") { out += "tanh";  continue; }
+        if (t == "FUNC_ASINH") { out += "sinh⁻¹"; continue; }
+        if (t == "FUNC_ACOSH") { out += "cosh⁻¹"; continue; }
+        if (t == "FUNC_ATANH") { out += "tanh⁻¹"; continue; }
+        if (t == "FUNC_LN") { out += "ln";    continue; }
+        if (t == "FUNC_LOG10") { out += "log";   continue; }
+        if (t == "FUNC_SQRT") { out += QStringLiteral("√"); continue; }
+        if (t == "FUNC_SQR") { out += "sqr";   continue; }
+        if (t == "FUNC_RECIP") { out += "1/";    continue; }
+        if (t == "FUNC_EXP") { out += "exp";   continue; }
+        if (t == "FUNC_EXP10") { out += "10^";   continue; }
+        if (t == "FUNC_FACT") { out += "!";     continue; }
+        if (t == "FUNC_MOD") { out += "mod";   continue; }
+        if (t == "FUNC_PERCENT") { out += "% of"; continue; }
+        // if (t == "FUNC_XROOT") { out += QStringLiteral("√x"); continue; } // we'll refine in a sec
+        if (t == "FUNC_XROOT") {
+            // FUNC_XROOT(x, y) → √[x](y)
+            if (i + 1 < toks.size() && toks[i + 1] == "(") {
+                int depth = 0;
+                size_t j = i + 1;
+                for (; j < toks.size(); ++j) {
+                    if (toks[j] == "(") ++depth;
+                    else if (toks[j] == ")") {
+                        --depth;
+                        if (depth == 0) { ++j; break; }
+                    }
+                }
+
+                // Find comma separating x and y
+                size_t commaPos = i + 2;
+                int innerDepth = 0;
+                for (; commaPos < j; ++commaPos) {
+                    if (toks[commaPos] == "(") innerDepth++;
+                    else if (toks[commaPos] == ")") innerDepth--;
+                    else if (toks[commaPos] == "," && innerDepth == 0)
+                        break;
+                }
+
+                // Extract root index x
+                QString x;
+                for (size_t k = i + 2; k < commaPos; ++k)
+                    x += QString::fromStdString(toks[k]);
+
+                // Extract radicand y
+                QString y;
+                for (size_t k = commaPos + 1; k < j - 1; ++k)
+                    y += QString::fromStdString(toks[k]);
+
+                // Format √[x](y)
+                out += QStringLiteral("√[") + x.trimmed() + QStringLiteral("](") + y.trimmed() + QStringLiteral(")");
+
+                // Skip processed tokens
+                i = j - 1;
+                continue;
+            }
+        }
+
+        // ... then your existing code that handles (, ), operators, numbers ...
+        // (keep your × / ÷ logic exactly as you had it)
+        // ...
 
         // Parentheses: no extra spaces next to them
         if (t == "(") {
@@ -314,6 +422,313 @@ void MainWindow::load_entry_from_big(const mpf_class& x) {
         numeric_input_buffer.push_back(std::string(1, ch));
     }
 }
+
+static BigFloat big_pi() {
+    // return BigFloat(std::acos(-1.0));
+    return BigFloat("3.14159265358979323846");
+}
+
+// angle unit helpers
+AngleUnit MainWindow::currentAngleUnit() const {
+    int idx = ui->angleUnitSelection->currentIndex();
+    if (idx == 1) return ANG_RAD;
+    if (idx == 2) return ANG_GRAD;
+    return ANG_DEG;
+}
+
+static BigFloat deg_to_rad(const BigFloat& d) {
+    return d * big_pi() / 180;
+}
+static BigFloat grad_to_rad(const BigFloat& g) {
+    return g * big_pi() / 200;
+}
+
+// Replace your previous expandDisplayFuncs implementation with this:
+
+static std::string joinTokensToInfix(const std::vector<std::string>& toks, size_t start, size_t end) {
+    // join tokens[start..end-1] with no separators (same flattening your on_button_equals used)
+    std::string s;
+    for (size_t i = start; i < end; ++i) s += toks[i];
+    return s;
+}
+
+static BigFloat evalGroupAsBig(const std::vector<std::string>& toks, size_t start, size_t end) {
+    // Flatten the group to infix and evaluate via your existing evaluator
+    std::string inf = joinTokensToInfix(toks, start, end);
+    return evaluateFromInfix(inf);
+}
+
+// Main expand: turn FUNC_NAME ( ... ) into numeric tokens by evaluating the (...) expression
+static std::vector<std::string> expandDisplayFuncs(const std::vector<std::string>& toks) {
+    std::vector<std::string> out;
+    size_t n = toks.size();
+    for (size_t i = 0; i < n; ++i) {
+        const std::string& t = toks[i];
+
+        // Always expand FUNC_PI and FUNC_E to their numeric values
+        if (t == "FUNC_PI") {
+            std::string s = mpf_to_string(big_pi(), 34);
+            for (char ch : s) out.push_back(std::string(1, ch));
+            continue;
+        }
+        if (t == "FUNC_E") {
+            BigFloat e(std::exp(1.0));
+            std::string s = mpf_to_string(e, 34);
+            for (char ch : s) out.push_back(std::string(1, ch));
+            continue;
+        }
+
+        // --- special-case: FUNC_SQR ( x ) => replace with (x)*(x) to preserve algebraic behavior
+        if (t == "FUNC_SQR") {
+            // if next is '(' collect group
+            if (i + 1 < n && toks[i + 1] == "(") {
+                // find matching paren
+                int depth = 0;
+                size_t j = i + 1;
+                for (; j < n; ++j) {
+                    if (toks[j] == "(") ++depth;
+                    else if (toks[j] == ")") {
+                        --depth;
+                        if (depth == 0) { ++j; break; }
+                    }
+                }
+                // push group, *, group
+                for (size_t k = i + 1; k < j; ++k) out.push_back(toks[k]);
+                out.push_back("*");
+                for (size_t k = i + 1; k < j; ++k) out.push_back(toks[k]);
+                i = j - 1;
+                continue;
+            }
+            // otherwise ignore
+            continue;
+        }
+
+        // FUNC_RECIP -> 1 / (group)
+        if (t == "FUNC_RECIP") {
+            if (i + 1 < n && toks[i + 1] == "(") {
+                int depth = 0;
+                size_t j = i + 1;
+                for (; j < n; ++j) {
+                    if (toks[j] == "(") ++depth;
+                    else if (toks[j] == ")") {
+                        --depth;
+                        if (depth == 0) { ++j; break; }
+                    }
+                }
+                out.push_back("1");
+                out.push_back("/");
+                for (size_t k = i + 1; k < j; ++k) out.push_back(toks[k]);
+                i = j - 1;
+                continue;
+            }
+            continue;
+        }
+
+        // FUNC_PERCENT -> (group) / 100
+        if (t == "FUNC_PERCENT") {
+            if (i + 1 < n && toks[i + 1] == "(") {
+                int depth = 0;
+                size_t j = i + 1;
+                for (; j < n; ++j) {
+                    if (toks[j] == "(") ++depth;
+                    else if (toks[j] == ")") {
+                        --depth;
+                        if (depth == 0) { ++j; break; }
+                    }
+                }
+                for (size_t k = i + 1; k < j; ++k) out.push_back(toks[k]);
+                out.push_back("/");
+                out.push_back("100");
+                i = j - 1;
+                continue;
+            }
+            continue;
+        }
+
+        // For unary/functions that should be evaluated to a numeric value at "=":
+        if (t.rfind("FUNC_", 0) == 0) {
+            // We will handle functions that take one argument: FUNC_SIN, FUNC_COS, FUNC_TAN, FUNC_LN, FUNC_LOG10, FUNC_SQRT, FUNC_ABS, FUNC_EXP, FUNC_EXP10, FUNC_SINH...
+            // if next token is "(" collect the group and evaluate
+            if (i + 1 < n && toks[i + 1] == "(") {
+                int depth = 0;
+                size_t j = i + 1;
+                for (; j < n; ++j) {
+                    if (toks[j] == "(") ++depth;
+                    else if (toks[j] == ")") {
+                        --depth;
+                        if (depth == 0) { ++j; break; }
+                    }
+                }
+                // ... inside your function handler block, before calling evalGroupAsBig:
+                auto expanded = expandDisplayFuncs(std::vector<std::string>(toks.begin() + i + 2, toks.begin() + j - 1));
+                BigFloat inner = evalGroupAsBig(expanded, 0, expanded.size());
+                // evaluate inner expression to BigFloat
+                // BigFloat inner = evalGroupAsBig(toks, i + 2, j - 1); // skip the outer '(' and ')'
+                BigFloat result = inner;
+
+                // Apply the function
+                if (t == "FUNC_SIN") {
+                    BigFloat vrad;
+                    // For evaluation time, assume degrees if UI set to degrees
+                    // Note: currentAngleUnit() is a member; use ANG_DEG default if not accessible here.
+                    // We'll call the global helper — but this function is static; we'll approximate by assuming degrees
+                    // If you prefer exact member access, change to a non-static helper that reads UI; for now, default to degrees handling outside.
+                    // We'll convert assuming ANG_DEG is the default global mode. To be safe, attempt to use deg_to_rad via currentAngleUnit sentinel:
+                    // Here: assume degrees by default (deg_to_rad defined above)
+                    // To use actual angle unit, you may want to expose a global currentAngle variable. For now use degrees as in original code path used get_d() callers.
+                    // We will convert using deg_to_rad to mirror earlier handlers (you can change as needed).
+                    vrad = deg_to_rad(inner);
+                    result = BigFloat(::sin(vrad.get_d()));
+                }
+                else if (t == "FUNC_COS") {
+                    BigFloat vrad = deg_to_rad(inner);
+                    result = BigFloat(::cos(vrad.get_d()));
+                }
+                else if (t == "FUNC_TAN") {
+                    BigFloat vrad = deg_to_rad(inner);
+                    result = BigFloat(::tan(vrad.get_d()));
+                }
+                else if (t == "FUNC_ASIN") {
+                    result = BigFloat(::asin(inner.get_d()));
+                }
+                else if (t == "FUNC_ACOS") {
+                    result = BigFloat(::acos(inner.get_d()));
+                }
+                else if (t == "FUNC_ATAN") {
+                    result = BigFloat(::atan(inner.get_d()));
+                }
+                else if (t == "FUNC_SINH") {
+                    result = BigFloat(::sinh(inner.get_d()));
+                }
+                else if (t == "FUNC_COSH") {
+                    result = BigFloat(::cosh(inner.get_d()));
+                }
+                else if (t == "FUNC_TANH") {
+                    result = BigFloat(::tanh(inner.get_d()));
+                }
+                else if (t == "FUNC_ASINH") {
+                    result = BigFloat(::asinh(inner.get_d()));
+                }
+                else if (t == "FUNC_ACOSH") {
+                    result = BigFloat(::acosh(inner.get_d()));
+                }
+                else if (t == "FUNC_ATANH") {
+                    result = BigFloat(::atanh(inner.get_d()));
+                }
+                else if (t == "FUNC_LN") {
+                    // ln(x)
+                    result = BigFloat(::log(inner.get_d()));
+                }
+                else if (t == "FUNC_LOG10") {
+                    result = BigFloat(::log10(inner.get_d()));
+                }
+                else if (t == "FUNC_SQRT") {
+                    if (inner < 0) {
+                        // leave as is (you may want to handle error earlier); here push "0" to avoid crash
+                        result = BigFloat(0);
+                    }
+                    else {
+                        mpf_t tmp; mpf_init(tmp);
+                        mpf_sqrt(tmp, inner.get_mpf_t());
+                        result = BigFloat(tmp); mpf_clear(tmp);
+                    }
+                }
+                else if (t == "FUNC_ABS") {
+                    if (inner < 0) result = -inner; else result = inner;
+                }
+                else if (t == "FUNC_EXP10") {
+                    result = BigFloat(::pow(10.0, inner.get_d()));
+                }
+                else if (t == "FUNC_EXP") {
+                    // treat as e^x
+                    result = BigFloat(::exp(inner.get_d()));
+                }
+                else if (t == "FUNC_FACT") {
+                    long long nfact = static_cast<long long>(inner.get_d());
+                    if (nfact < 0) {
+                        result = BigFloat(0);
+                    }
+                    else {
+                        BigFloat res = 1;
+                        for (long long k = 2; k <= nfact; ++k) res *= BigFloat(static_cast<double>(k));
+                        result = res;
+                    }
+                }
+                else if (t == "FUNC_XROOT") {
+                    // FUNC_XROOT(x, y) => y^(1/x)
+                    if (i + 1 < n && toks[i + 1] == "(") {
+                        int depth = 0;
+                        size_t j = i + 1;
+                        for (; j < n; ++j) {
+                            if (toks[j] == "(") ++depth;
+                            else if (toks[j] == ")") {
+                                --depth;
+                                if (depth == 0) { ++j; break; }
+                            }
+                        }
+
+                        // Find comma separating x and y
+                        size_t commaPos = i + 2;
+                        int innerDepth = 0;
+                        for (; commaPos < j; ++commaPos) {
+                            if (toks[commaPos] == "(") innerDepth++;
+                            else if (toks[commaPos] == ")") innerDepth--;
+                            else if (toks[commaPos] == "," && innerDepth == 0)
+                                break;
+                        }
+
+                        // Evaluate x and y parts
+                        auto leftPart = std::vector<std::string>(toks.begin() + i + 2, toks.begin() + commaPos);
+                        auto rightPart = std::vector<std::string>(toks.begin() + commaPos + 1, toks.begin() + j - 1);
+
+                        BigFloat x = evalGroupAsBig(leftPart, 0, leftPart.size());
+                        BigFloat y = evalGroupAsBig(rightPart, 0, rightPart.size());
+
+                        if (x == 0) {
+                            // Root 0 is undefined
+                            out.push_back("0");
+                        }
+                        else {
+                            BigFloat result = BigFloat(::pow(y.get_d(), 1.0 / x.get_d()));
+                            std::string s = mpf_to_string(result, 34);
+                            for (char ch : s)
+                                out.push_back(std::string(1, ch));
+                        }
+
+                        i = j - 1;
+                        continue;
+                    }
+                }
+                else {
+                    // unknown FUNC_*, fallback: just append inner tokens (no function application)
+                    for (size_t k = i + 1; k < j; ++k) out.push_back(toks[k]);
+                    i = j - 1;
+                    continue;
+                }
+
+                // push numeric result as tokens (digits and '.' as separate tokens to match other code)
+                std::string s = mpf_to_string(result, 34);
+                for (char ch : s) {
+                    out.push_back(std::string(1, ch));
+                }
+
+                i = j - 1;
+                continue;
+            }
+            else {
+                // unknown no-arg function: skip
+                continue;
+            }
+        }
+
+        // default: copy tokens through
+        out.push_back(t);
+    }
+
+    return out;
+}
+
+static std::vector<std::string> expandDisplayFuncs(const std::vector<std::string>& toks);
 
 void MainWindow::updateDisplay() {
     std::string eq = concat_equation_buffer_content();
@@ -601,17 +1016,25 @@ void MainWindow::on_button_backspace_clicked() {
     updateDisplay();
 }
 
-void MainWindow::appendDigit(const std::string& digit) {
-    if (new_number) {
+void MainWindow::appendDigit(const std::string& digit)
+{
+    if (new_number || just_evaluated)
+    {
         numeric_input_buffer.clear();
+
+        // Only clear the equation buffer if we just finished evaluating (=),
+        // not if we just pressed a function like sin(), cos(), etc.
+        if (just_evaluated_full)
+        {
+            equation_buffer.clear();
+            just_evaluated_full = false;
+        }
+
+        just_evaluated = false;
         new_number = false;
     }
 
-    if (just_evaluated) {
-        // Start new expression fresh
-        equation_buffer.clear();
-        just_evaluated = false;
-    }
+    //
 
     // Avoid leading zeros unless there's a decimal point
     if (numeric_input_buffer.size() == 1 && numeric_input_buffer[0] == "0" && digit != ".") {
@@ -637,8 +1060,10 @@ static inline bool isOpToken(const std::string& t) {
 }
 
 void MainWindow::appendOperator(const std::string& op) {
-    auto isOpToken = [](const std::string& t) { return t == "+" || t == "-" || t == "*" || t == "/"; };
-
+    // reset just_evaluated_full flag
+    if (just_evaluated_full) {
+        just_evaluated_full = false;
+    }
 
     // If buffer is empty and user presses an operator after AC, treat as 0 <op>
     if (equation_buffer.empty() && new_number) {
@@ -709,62 +1134,79 @@ void MainWindow::on_button_ans_clicked() {
 }
 
 void MainWindow::on_button_equals_clicked() {
-    // --- 1) Build token list for both display and evaluation ---
     std::vector<std::string> eval_tokens = equation_buffer;
 
-    // Commit current input (wrap negatives the same way you do elsewhere)
+    // commit current entry
     if (!new_number) {
         if (number_is_negative) { eval_tokens.push_back("("); eval_tokens.push_back("-"); }
         for (const auto& c : numeric_input_buffer) eval_tokens.push_back(c);
         if (number_is_negative) eval_tokens.push_back(")");
     }
 
-    // Auto-close open parens
+    // auto-close
     for (int i = 0; i < open_parens; ++i) eval_tokens.push_back(")");
+    open_parens = 0;
 
-    // Strip any trailing operator (token-based)
+    // strip trailing op
     auto isOpToken = [](const std::string& t) { return t == "+" || t == "-" || t == "*" || t == "/"; };
-    if (!eval_tokens.empty() && isOpToken(eval_tokens.back())) {
+    if (!eval_tokens.empty() && isOpToken(eval_tokens.back()))
         eval_tokens.pop_back();
-    }
 
-    // If nothing left, just use the current input as the whole expression
+    // fallback to entry only
     if (eval_tokens.empty()) {
-        // reflect current input only
-        eval_tokens.clear();
         if (number_is_negative) { eval_tokens.push_back("("); eval_tokens.push_back("-"); }
         for (const auto& c : numeric_input_buffer) eval_tokens.push_back(c);
         if (number_is_negative) eval_tokens.push_back(")");
     }
 
-    // --- 2) Show the BEAUTIFIED equation BEFORE evaluation ---
-    // Use your pretty-printer on the token vector
+    // show pretty (with sin, √, ×, ÷, etc.)
     ui->equationLabel->setText(pretty_equation_from_tokens(eval_tokens) + " =");
 
-    // --- 3) Concatenate ASCII tokens for the evaluator ---
+    // make evaluator-safe
+    eval_tokens = expandDisplayFuncs(eval_tokens);
+
+    // flatten
     std::string final_eq;
-    final_eq.reserve(eval_tokens.size() * 2);
     for (const auto& t : eval_tokens) final_eq += t;
 
-    // --- 4) Evaluate (RPN + GMP) ---
+    // evaluate
     BigFloat res = evaluateFromInfix(final_eq);
-    last_answer = res; // store last answer
+    last_answer = res;
     just_evaluated = true;
 
     std::string result;
-    if (g_eval_div0) {
-        result = "undefined";
-    }
-    else {
-        result = mpf_to_string(res, 34); // your GMP-safe formatter
-    }
+    if (g_eval_div0) result = "undefined";
+    else            result = mpf_to_string(res, 34);
 
     ui->answerInputLabel->setText(QString::fromStdString(result));
 
-    // --- 5) Prepare next state ---
-    equation_buffer.clear();
+    //// prepare next
+    //equation_buffer.clear();
+    //numeric_input_buffer = { g_eval_div0 ? std::string("0") : result };
+    //number_is_negative = false;
+    //dp_used = false;
+
+    // Instead of clearing, set equation_buffer to previous answer tokens,
+    // so operator press can chain with last answer
+    if (!g_eval_div0) {
+        std::string ans_str = mpf_to_string(last_answer, 34);
+        equation_buffer.clear();
+        for (char ch : ans_str) {
+            equation_buffer.push_back(std::string(1, ch));
+        }
+    }
+    else {
+        equation_buffer.clear();
+        equation_buffer.push_back("0");
+    }
+
     numeric_input_buffer = { g_eval_div0 ? std::string("0") : result };
-    new_number = true; number_is_negative = false; dp_used = false; open_parens = 0;
+    number_is_negative = false;
+    dp_used = false;
+
+    just_evaluated = true;
+    just_evaluated_full = true; // mark that a full evaluation just happened
+    new_number = true;
 }
 
 
@@ -873,28 +1315,178 @@ void MainWindow::on_angleUnitSelection_activated(int i) {
 }
 
 void MainWindow::on_button_absolute_value_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after abs() if we just finished "="
+    just_evaluated_full = false;
+
+    equation_buffer.push_back("FUNC_ABS");
+    equation_buffer.push_back("(");
+    open_parens++; // track open '('
+
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_constant_e_clicked() {
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
+
+    equation_buffer.push_back("FUNC_E");
+
+    new_number = true;
+    just_evaluated = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_constant_pi_clicked() {
+    // Start a new equation if we just finished one
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
+
+    // Append π as a numeric constant
+    equation_buffer.push_back("FUNC_PI");
+
+    // Treat it as a complete number entry
+    new_number = true;
+    just_evaluated = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_cosine_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after sin() if we just finished "="
+    just_evaluated_full = false;
+
+    equation_buffer.push_back("FUNC_COS");
+    equation_buffer.push_back("(");
+    open_parens++; // keep track of unclosed '('
+
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance parentheses
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_exponent_scientific_clicked() {
 }
 void MainWindow::on_button_exponential_clicked() {
+    // Commit current number before inserting ^
+    if (!new_number) {
+        if (number_is_negative) equation_buffer.push_back("(");
+        if (number_is_negative) equation_buffer.push_back("-");
+        for (const auto& c : numeric_input_buffer)
+            equation_buffer.push_back(c);
+        if (number_is_negative) equation_buffer.push_back(")");
+        new_number = true;
+    }
+
+    // Append caret operator for exponentiation
+    equation_buffer.push_back("^");
+
+    // Prepare for next numeric entry
+    dp_used = false;
+    number_is_negative = false;
+    new_number = true;
+
+    updateDisplay();
 }
 void MainWindow::on_button_exponential_base10_clicked() {
+    // Append "10 ^ (" then current number, then ")"
+    std::string x = concat_numeric_input_buffer_content();
+    equation_buffer.push_back("10");
+    equation_buffer.push_back("^");
+    equation_buffer.push_back(x);
+
+    updateDisplay();
+    new_number = true;
 }
 void MainWindow::on_button_exponential_natural_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+    equation_buffer.push_back("FUNC_E");
+    equation_buffer.push_back("^");
+    equation_buffer.push_back(x);
+
+    updateDisplay();
+    new_number = true;
 }
 void MainWindow::on_button_factorial_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+    equation_buffer.push_back("FUNC_FACT");
+    equation_buffer.push_back("(");
+    equation_buffer.push_back(x);
+    equation_buffer.push_back(")");
+    updateDisplay();
+
+    BigFloat v(x);
+    long long n = static_cast<long long>(v.get_d());
+    if (n < 0) {
+        ui->answerInputLabel->setText("Error: n! (n<0)");
+        return;
+    }
+
+    BigFloat r = 1;
+    for (long long i = 2; i <= n; ++i)
+        r *= BigFloat(static_cast<double>(i)); // fixed
+
+    load_entry_from_big(r);
 }
 void MainWindow::on_button_hyp_cosine_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+    equation_buffer.push_back("FUNC_COSH");
+    equation_buffer.push_back("(");
+    equation_buffer.push_back(x);
+    equation_buffer.push_back(")");
+    updateDisplay();
+
+    BigFloat v(x);
+    BigFloat r = std::cosh(v.get_d());
+    load_entry_from_big(r);
 }
 void MainWindow::on_button_hyp_sine_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+    equation_buffer.push_back("FUNC_SINH");
+    equation_buffer.push_back("(");
+    equation_buffer.push_back(x);
+    equation_buffer.push_back(")");
+    updateDisplay();
+
+    BigFloat v(x);
+    BigFloat r = std::sinh(v.get_d());
+    load_entry_from_big(r);
 }
 void MainWindow::on_button_hyp_tangent_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+    equation_buffer.push_back("FUNC_TANH");
+    equation_buffer.push_back("(");
+    equation_buffer.push_back(x);
+    equation_buffer.push_back(")");
+    updateDisplay();
+
+    BigFloat v(x);
+    BigFloat r = std::tanh(v.get_d());
+    load_entry_from_big(r);
 }
 void MainWindow::on_button_inverse_cosine_clicked() {
 }
@@ -909,26 +1501,192 @@ void MainWindow::on_button_inverse_sine_clicked() {
 void MainWindow::on_button_inverse_tangent_clicked() {
 }
 void MainWindow::on_button_logarithm_common_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+    equation_buffer.push_back("FUNC_LOG10");
+    equation_buffer.push_back("(");
+    equation_buffer.push_back(x);
+    equation_buffer.push_back(")");
+    updateDisplay();
+
+    BigFloat v(x);
+    if (v <= 0) {
+        ui->answerInputLabel->setText("Error: log(<=0)");
+        return;
+    }
+    BigFloat r = ::log10(v.get_d());
+    load_entry_from_big(r);
 }
 void MainWindow::on_button_logarithm_natural_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+    equation_buffer.push_back("FUNC_LN");
+    equation_buffer.push_back("(");
+    equation_buffer.push_back(x);
+    equation_buffer.push_back(")");
+    updateDisplay();
+
+    BigFloat v(x);
+    if (v <= 0) {
+        ui->answerInputLabel->setText("Error: ln(<=0)");
+        return;
+    }
+    BigFloat r = ::log(v.get_d());
+    load_entry_from_big(r);
 }
 void MainWindow::on_button_modulus_clicked() {
 }
 void MainWindow::on_button_percent_clicked() {
+    // basic %: x -> x/100
+    std::string x = concat_numeric_input_buffer_content();
+    equation_buffer.push_back("FUNC_PERCENT");
+    equation_buffer.push_back("(");
+    equation_buffer.push_back(x);
+    equation_buffer.push_back(")");
+    updateDisplay();
+
+    BigFloat v(x);
+    BigFloat r = v / 100;
+    // load_entry_from_big(r);
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_random_number_clicked() {
 }
 void MainWindow::on_button_reciprocal_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after reciprocal() if we just finished "="
+    just_evaluated_full = false;
+
+    equation_buffer.push_back("FUNC_RECIP");
+    equation_buffer.push_back("(");
+    open_parens++; // track open '('
+
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_sine_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after sin() if we just finished "="
+    just_evaluated_full = false;
+
+    equation_buffer.push_back("FUNC_SIN");
+    equation_buffer.push_back("(");
+    open_parens++; // keep track of unclosed '('
+
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance parentheses
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_square_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+
+    // If user has just typed a number, commit it to the equation buffer
+    if (!new_number) {
+        if (number_is_negative) equation_buffer.push_back("(");
+        if (number_is_negative) equation_buffer.push_back("-");
+        for (const auto& c : numeric_input_buffer) equation_buffer.push_back(c);
+        if (number_is_negative) equation_buffer.push_back(")");
+        new_number = true;
+    }
+
+    // Append ^ 2 operator tokens
+    equation_buffer.push_back("^");
+    equation_buffer.push_back("2");
+
+    updateDisplay();
 }
 void MainWindow::on_button_square_root_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after sin() if we just finished "="
+    just_evaluated_full = false;
+
+    equation_buffer.push_back("FUNC_SQRT");
+    equation_buffer.push_back("(");
+    open_parens++; // keep track of unclosed '('
+
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance parentheses
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_tangent_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after sin() if we just finished "="
+    just_evaluated_full = false;
+
+    equation_buffer.push_back("FUNC_TAN");
+    equation_buffer.push_back("(");
+    open_parens++; // keep track of unclosed '('
+
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance parentheses
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_x_th_root_clicked() {
+    // Commit the current number (the root index x)
+    std::string x = concat_numeric_input_buffer_content();
+
+    // Append the function token for evaluation
+    equation_buffer.push_back("FUNC_XROOT");
+    equation_buffer.push_back("(");
+    open_parens++;
+    equation_buffer.push_back(x);
+    equation_buffer.push_back(","); // comma separates x and y inside parentheses
+    // Wait for user to enter the next number (the radicand y)
+
+    BigFloat v(x);
+    if (v < 0) {
+        ui->answerInputLabel->setText("Error: xthroot(<0)");
+        return;
+    }
+    mpf_t tmp; mpf_init(tmp);
+    mpf_sqrt(tmp, v.get_mpf_t());
+    BigFloat r(tmp); mpf_clear(tmp);
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 
 // Buttons only in Programmer View

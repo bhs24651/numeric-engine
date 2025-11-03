@@ -11,6 +11,12 @@ namespace Ui {
 }
 QT_END_NAMESPACE
 
+enum AngleUnit {
+    ANG_DEG = 0,
+    ANG_RAD = 1,
+    ANG_GRAD = 2
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -139,5 +145,6 @@ private slots:
 
 private:
     Ui::MainWindow* ui;
+    AngleUnit currentAngleUnit() const;
 };
 #endif // MAINWINDOW_H
