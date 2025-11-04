@@ -22,6 +22,7 @@ std::vector<std::string> equation_buffer;
 std::vector<std::string> equation_display;
 std::vector<std::string> numeric_input_buffer = { "0" };
 std::string equation = "";
+std::string last_eval_error;
 bool dp_used = false;
 bool number_is_negative = false;
 bool new_number = true;
@@ -304,7 +305,7 @@ static QString pretty_equation_from_tokens(const std::vector<std::string>& raw) 
         if (t == "FUNC_RECIP") { out += "1/";    continue; }
         if (t == "FUNC_EXP") { out += "exp";   continue; }
         if (t == "FUNC_EXP10") { out += "10^";   continue; }
-        if (t == "FUNC_FACT") { out += "!";     continue; }
+        if (t == "FUNC_FACT") { out += "fact";     continue; }
         if (t == "FUNC_MOD") { out += "mod";   continue; }
         if (t == "FUNC_PERCENT") { out += "% of"; continue; }
         // if (t == "FUNC_XROOT") { out += QStringLiteral("√x"); continue; } // we'll refine in a sec
@@ -588,11 +589,31 @@ static std::vector<std::string> expandDisplayFuncs(const std::vector<std::string
                     BigFloat vrad = deg_to_rad(inner);
                     result = BigFloat(::tan(vrad.get_d()));
                 }
-                else if (t == "FUNC_ASIN") {
+                /*else if (t == "FUNC_ASIN") {
                     result = BigFloat(::asin(inner.get_d()));
                 }
                 else if (t == "FUNC_ACOS") {
                     result = BigFloat(::acos(inner.get_d()));
+                }*/
+                else if (t == "FUNC_ASIN") {
+                    double v = inner.get_d();
+                    if (v < -1.0 || v > 1.0) {
+                        last_eval_error = "Error: asin domain [-1,1]";
+                        out.clear();
+                        out.push_back("0");
+                        continue;
+                    }
+                    result = BigFloat(::asin(v));
+                }
+                else if (t == "FUNC_ACOS") {
+                    double v = inner.get_d();
+                    if (v < -1.0 || v > 1.0) {
+                        last_eval_error = "Error: acos domain [-1,1]";
+                        out.clear();
+                        out.push_back("0");
+                        continue;
+                    }
+                    result = BigFloat(::acos(v));
                 }
                 else if (t == "FUNC_ATAN") {
                     result = BigFloat(::atan(inner.get_d()));
@@ -610,17 +631,37 @@ static std::vector<std::string> expandDisplayFuncs(const std::vector<std::string
                     result = BigFloat(::asinh(inner.get_d()));
                 }
                 else if (t == "FUNC_ACOSH") {
-                    result = BigFloat(::acosh(inner.get_d()));
+                    double v = inner.get_d();
+                    if (v < 1.0) {
+                        last_eval_error = "Error: acosh domain [1,∞]";
+                        out.clear();
+                        out.push_back("0");
+                        continue;
+                    }
+                    result = BigFloat(::acosh(v));
                 }
                 else if (t == "FUNC_ATANH") {
                     result = BigFloat(::atanh(inner.get_d()));
                 }
                 else if (t == "FUNC_LN") {
-                    // ln(x)
-                    result = BigFloat(::log(inner.get_d()));
+                    double v = inner.get_d();
+                    if (v <= 0.0) {
+                        last_eval_error = "Error: ln domain (0,∞)";
+                        out.clear();
+                        out.push_back("0");
+                        continue;
+                    }
+                    result = BigFloat(::log(v));
                 }
                 else if (t == "FUNC_LOG10") {
-                    result = BigFloat(::log10(inner.get_d()));
+                    double v = inner.get_d();
+                    if (v <= 0.0) {
+                        last_eval_error = "Error: log domain (0,∞)";
+                        out.clear();
+                        out.push_back("0");
+                        continue;
+                    }
+                    result = BigFloat(::log10(v));
                 }
                 else if (t == "FUNC_SQRT") {
                     if (inner < 0) {
@@ -1178,7 +1219,16 @@ void MainWindow::on_button_equals_clicked() {
     if (g_eval_div0) result = "undefined";
     else            result = mpf_to_string(res, 34);
 
-    ui->answerInputLabel->setText(QString::fromStdString(result));
+    if (!last_eval_error.empty()) {
+        ui->answerInputLabel->setText(QString::fromStdString(last_eval_error));
+        last_eval_error.clear();
+        return;
+    }
+    else { 
+        ui->answerInputLabel->setText(QString::fromStdString(result)); 
+    }
+
+    
 
     //// prepare next
     //equation_buffer.clear();
@@ -1450,45 +1500,101 @@ void MainWindow::on_button_factorial_clicked() {
     for (long long i = 2; i <= n; ++i)
         r *= BigFloat(static_cast<double>(i)); // fixed
 
-    load_entry_from_big(r);
+    // load_entry_from_big(r);
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_hyp_cosine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after cosh() if we just finished "="
+    just_evaluated_full = false;
+
     equation_buffer.push_back("FUNC_COSH");
     equation_buffer.push_back("(");
-    equation_buffer.push_back(x);
-    equation_buffer.push_back(")");
-    updateDisplay();
+    open_parens++; // keep track of unclosed '('
 
-    BigFloat v(x);
-    BigFloat r = std::cosh(v.get_d());
-    load_entry_from_big(r);
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance parentheses
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_hyp_sine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after sinh() if we just finished "="
+    just_evaluated_full = false;
+
     equation_buffer.push_back("FUNC_SINH");
     equation_buffer.push_back("(");
-    equation_buffer.push_back(x);
-    equation_buffer.push_back(")");
-    updateDisplay();
+    open_parens++; // keep track of unclosed '('
 
-    BigFloat v(x);
-    BigFloat r = std::sinh(v.get_d());
-    load_entry_from_big(r);
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance parentheses
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_hyp_tangent_clicked() {
     std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after tanh() if we just finished "="
+    just_evaluated_full = false;
+
     equation_buffer.push_back("FUNC_TANH");
     equation_buffer.push_back("(");
-    equation_buffer.push_back(x);
-    equation_buffer.push_back(")");
-    updateDisplay();
+    open_parens++; // keep track of unclosed '('
 
-    BigFloat v(x);
-    BigFloat r = std::tanh(v.get_d());
-    load_entry_from_big(r);
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance parentheses
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_inverse_cosine_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after acos() if we just finished "="
+    just_evaluated_full = false;
+
+    equation_buffer.push_back("FUNC_ACOS");
+    equation_buffer.push_back("(");
+    open_parens++; // keep track of unclosed '('
+
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance parentheses
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_inverse_hyp_cosine_clicked() {
 }
@@ -1497,9 +1603,50 @@ void MainWindow::on_button_inverse_hyp_sine_clicked() {
 void MainWindow::on_button_inverse_hyp_tangent_clicked() {
 }
 void MainWindow::on_button_inverse_sine_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after asin() if we just finished "="
+    just_evaluated_full = false;
+
+    equation_buffer.push_back("FUNC_ASIN");
+    equation_buffer.push_back("(");
+    open_parens++; // keep track of unclosed '('
+
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance parentheses
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_inverse_tangent_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after atan() if we just finished "="
+    just_evaluated_full = false;
+
+    equation_buffer.push_back("FUNC_ATAN");
+    equation_buffer.push_back("(");
+    open_parens++; // keep track of unclosed '('
+
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance parentheses
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
+/*
 void MainWindow::on_button_logarithm_common_clicked() {
     std::string x = concat_numeric_input_buffer_content();
     equation_buffer.push_back("FUNC_LOG10");
@@ -1514,8 +1661,38 @@ void MainWindow::on_button_logarithm_common_clicked() {
         return;
     }
     BigFloat r = ::log10(v.get_d());
-    load_entry_from_big(r);
+    // load_entry_from_big(r);
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
+*/
+void MainWindow::on_button_logarithm_common_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after log() if we just finished "="
+    just_evaluated_full = false;
+
+    equation_buffer.push_back("FUNC_LOG10");
+    equation_buffer.push_back("(");
+    open_parens++; // keep track of unclosed '('
+
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance parentheses
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
+}
+/*
 void MainWindow::on_button_logarithm_natural_clicked() {
     std::string x = concat_numeric_input_buffer_content();
     equation_buffer.push_back("FUNC_LN");
@@ -1530,7 +1707,36 @@ void MainWindow::on_button_logarithm_natural_clicked() {
         return;
     }
     BigFloat r = ::log(v.get_d());
-    load_entry_from_big(r);
+    // load_entry_from_big(r);
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
+}
+*/
+void MainWindow::on_button_logarithm_natural_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after log() if we just finished "="
+    just_evaluated_full = false;
+
+    equation_buffer.push_back("FUNC_LN");
+    equation_buffer.push_back("(");
+    open_parens++; // keep track of unclosed '('
+
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance parentheses
+    }
+
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
+    updateDisplay();
 }
 void MainWindow::on_button_modulus_clicked() {
 }
