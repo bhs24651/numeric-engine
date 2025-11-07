@@ -3,6 +3,9 @@
 
 int main(int argc, char *argv[])
 {
+    // ~8192 bits (~2460 decimal digits); pick a value that fits your perf profile
+    mpf_set_default_prec(8192);
+
     QApplication a(argc, argv);
     MainWindow w;
     w.show();

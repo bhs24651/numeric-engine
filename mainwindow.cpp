@@ -130,6 +130,20 @@ static std::vector<std::string> infixToPostfix(const std::vector<std::string>& t
 }
 
 static BigFloat toBig(const std::string& s) { BigFloat v(s); return v; }
+
+static BigFloat pow_int(BigFloat base, long long exp) {
+    if (exp == 0) return BigFloat(1);
+    bool neg = (exp < 0);
+    unsigned long long n = neg ? (unsigned long long)(-exp) : (unsigned long long)exp;
+    BigFloat res = 1;
+    while (n) {
+        if (n & 1ULL) res *= base;
+        if (n > 1)    base *= base;
+        n >>= 1ULL;
+    }
+    return neg ? (BigFloat(1) / res) : res;
+}
+
 static BigFloat evalPostfix(const std::vector<std::string>& rpn) {
     std::vector<BigFloat> st;
     for (const auto& t : rpn) {
@@ -148,7 +162,18 @@ static BigFloat evalPostfix(const std::vector<std::string>& rpn) {
             if (b == 0) { g_eval_div0 = true; st.push_back(BigFloat(0)); } // do not attempt inf/NaN
             else st.push_back(a / b);
         }
-        else if (t == "^") st.push_back(::pow(a.get_d(), b.get_d()));
+        else if (t == "^") {
+            // Use full-precision integer exponent when possible
+            double bd = b.get_d();
+            long long bi = static_cast<long long>(bd);
+            if (std::fabs(bd - static_cast<double>(bi)) < 1e-12) {
+                st.push_back(pow_int(a, bi));
+            }
+            else {
+                // fallback for non-integer exponents
+                st.push_back(BigFloat(::pow(a.get_d(), b.get_d())));
+            }
+        }
     }
     return st.empty() ? BigFloat(0) : st.back();
 }
@@ -158,6 +183,133 @@ static BigFloat evaluateFromInfix(const std::string& expr) {
     auto toks = tokenizeInfix(expr);
     auto rpn = infixToPostfix(toks);
     return evalPostfix(rpn);
+}
+
+static std::string format_fixed(const mpf_class& x, int max_decimals) {
+    // get a long mantissa then round/cut to max_decimals in fixed form
+    mp_exp_t exp = 0;
+    std::string mant = x.get_str(exp, 10, 80); // 80+ digits headroom
+    bool neg = (!mant.empty() && mant[0] == '-');
+    if (neg) mant.erase(mant.begin());
+    if (mant.empty()) return "0";
+
+    std::string s;
+    if (exp <= 0) {
+        s += neg ? "-0." : "0.";
+        s.append(static_cast<size_t>(-exp), '0');
+        s += mant;
+    }
+    else if (static_cast<size_t>(exp) >= mant.size()) {
+        s += neg ? "-" : "";
+        s += mant;
+        s.append(static_cast<size_t>(exp) - mant.size(), '0');
+    }
+    else {
+        s += neg ? "-" : "";
+        s.append(mant, 0, static_cast<size_t>(exp));
+        s.push_back('.');
+        s.append(mant, static_cast<size_t>(exp), std::string::npos);
+    }
+
+    // round/cut to max_decimals
+    auto dot = s.find('.');
+    if (dot != std::string::npos) {
+        size_t want = dot + 1 + static_cast<size_t>(max_decimals);
+        if (s.size() > want) {
+            // simple cut (optional: implement half-up rounding)
+            s.resize(want);
+        }
+        // trim trailing zeros
+        while (!s.empty() && s.back() == '0') s.pop_back();
+        if (!s.empty() && s.back() == '.') s.pop_back();
+    }
+    return s.empty() ? "0" : s;
+}
+
+// Round a digit-only mantissa to `keep` significant digits (half-up), with carry propagation.
+static void round_digit_mantissa(std::string& d, int keep) {
+    if ((int)d.size() <= keep) return;
+    int carry = (d[keep] >= '5') ? 1 : 0;
+    d.resize(keep);
+    for (int i = keep - 1; i >= 0 && carry; --i) {
+        int v = (d[i] - '0') + carry;
+        d[i] = char('0' + (v % 10));
+        carry = v / 10;
+    }
+    if (carry) d.insert(d.begin(), '1'); // e.g., 9..9 -> 10..0, bumps exponent
+}
+
+static std::string format_scientific_e(const mpf_class& x, int sig_digits) {
+    if (x == 0) return "0";
+    bool neg = (x < 0);
+    mpf_class ax = neg ? -x : x;
+
+    mp_exp_t exp10 = 0;
+    // request one guard digit so we can round correctly ourselves
+    std::string digits = ax.get_str(exp10, 10, sig_digits + 1); // pure digits, no '.'
+
+    round_digit_mantissa(digits, sig_digits);
+    if ((int)digits.size() > sig_digits) {
+        // rounding inserted a new leading '1' -> increase exponent
+        exp10 += 1;
+    }
+
+    // Build mantissa: 1.xxx (trim trailing zeros and dot)
+    std::string mant;
+    mant.push_back(digits[0]);
+    if (sig_digits > 1) {
+        mant.push_back('.');
+        mant.append(digits.begin() + 1, digits.end());
+        while (!mant.empty() && mant.back() == '0') mant.pop_back();
+        if (!mant.empty() && mant.back() == '.') mant.pop_back();
+    }
+
+    long e = static_cast<long>(exp10) - 1;
+    return std::string(neg ? "-" : "") + mant + "e" + (e >= 0 ? "+" : "") + std::to_string(e);
+}
+
+static std::string format_scientific(const mpf_class& x, int sig_digits) {
+    if (x == 0) return "0";
+    mp_exp_t exp10 = 0;
+    std::string mant = x.get_str(exp10, 10, sig_digits + 2); // a little headroom
+    bool neg = (!mant.empty() && mant[0] == '-');
+    if (neg) mant.erase(mant.begin());
+
+    // mant like "12345..." with exp10 meaning 1.2345... × 10^(exp10-1)
+    std::string m = mant;
+    if (m.size() > 1) m.insert(m.begin() + 1, '.');
+
+    // trim decimals
+    if (auto p = m.find('.'); p != std::string::npos) {
+        // keep (sig_digits) significant digits total
+        size_t keep = 1 + 1 + (sig_digits - 1); // "d" "." + (sig-1)
+        if (m.size() > keep) m.resize(keep);
+        while (!m.empty() && m.back() == '0') m.pop_back();
+        if (!m.empty() && m.back() == '.') m.pop_back();
+    }
+
+    long e = static_cast<long>(exp10) - 1;
+    return std::string(neg ? "-" : "") + m + " × 10^" + std::to_string(e);
+}
+
+static std::string format_for_display(const mpf_class& x,
+    int max_decimals = 20,
+    int sci_sig = 20,
+    int sci_pos_thresh = 9,   // |x| >= 1e9
+    int sci_neg_thresh = -9)  // |x| <= 1e-9
+{
+    if (x == 0) return "0";
+    mp_exp_t e = 0;
+    (void)x.get_str(e, 10, 2);
+    long exp10 = static_cast<long>(e) - 1;
+
+    if (exp10 >= sci_pos_thresh || exp10 <= sci_neg_thresh) {
+        // CHANGED: use e-notation with correct rounding
+        return format_scientific_e(x, sci_sig);
+    }
+    else {
+        return format_fixed(x, max_decimals);
+    }
 }
 
 // GMP string formatter (no iostream precision quirks)
@@ -270,6 +422,34 @@ static bool isUnaryMinusAt(const std::vector<std::string>& toks, size_t i) {
     return (prev == "(" || isBinaryOpTok(prev));
 }
 
+// --- add these helpers just ABOVE pretty_equation_from_tokens() ---
+
+static bool isNumberToken(const std::string& s) {
+    if (s.empty()) return false;
+    size_t i = 0;
+    if (s[0] == '-') {
+        if (s.size() == 1) return false;
+        i = 1;
+    }
+    bool dp = false;
+    for (; i < s.size(); ++i) {
+        unsigned char c = static_cast<unsigned char>(s[i]);
+        if (std::isdigit(c)) continue;
+        if (s[i] == '.' && !dp) { dp = true; continue; }
+        return false;
+    }
+    return true;
+}
+
+// Detect the exact token sequence: "(" "-" <number> ")"
+static bool isNegativeLiteral(const std::vector<std::string>& toks, size_t i) {
+    return (i + 3 < toks.size()
+        && toks[i] == "("
+        && toks[i + 1] == "-"
+        && isNumberToken(toks[i + 2])
+        && toks[i + 3] == ")");
+}
+
 static QString pretty_equation_from_tokens(const std::vector<std::string>& raw) {
     const auto toks = coalesceNumbers(raw);
     QString out;
@@ -281,6 +461,50 @@ static QString pretty_equation_from_tokens(const std::vector<std::string>& raw) 
 
     for (size_t i = 0; i < toks.size(); ++i) {
         const std::string& t = toks[i];
+
+        // collapse "( - n )" but wrap if it's the base of a power: (-n)^m
+        if (isNegativeLiteral(toks, i)) {
+            // tokens are: i:"(", i+1:"-", i+2:<num>, i+3:")"
+            bool powAfter = (i + 4 < toks.size() && toks[i + 4] == "^");
+            QString neg = "-" + QString::fromStdString(toks[i + 2]);
+            if (powAfter) {
+                out += "(" + neg + ")";    // show (-n) when immediately followed by ^
+            }
+            else {
+                out += neg;                // otherwise just -n
+            }
+            i += 3; // skip "( - n )"
+            continue;
+        }
+
+        // If this token is a number (including negative like "-3"), and the NEXT token is '^',
+        // we should wrap the base in parentheses to show (-x)^y
+        /*if (isNumberToken(t) && (i + 1 < toks.size()) && toks[i + 1] == "^") {
+            // wrap negative or positive numbers only if negative or if user prefers clarity:
+            if (!t.empty() && t[0] == '-') {
+                out += "(" + QString::fromStdString(t) + ")";
+            }
+            else {
+                out += QString::fromStdString(t);
+            }
+            continue;
+        }*/
+        // Wrap negative numbers in parentheses when used as base for power (^)
+        if ((i + 1 < toks.size()) && toks[i + 1] == "^") {
+            // Case 1: plain negative number token "-3"
+            if (isNumberToken(t) && !t.empty() && t[0] == '-') {
+                out += "(" + QString::fromStdString(t) + ")";
+                continue;
+            }
+
+            // Case 2: already parenthesized form "( - 3 )"
+            if (isNegativeLiteral(toks, i)) {
+                QString neg = "-" + QString::fromStdString(toks[i + 2]);
+                out += "(" + neg + ")";
+                i += 3; // skip "( - n )"
+                continue;
+            }
+        }
 
         // --- display-only funcs ---
         if (t == "FUNC_ABS") { out += "abs";   continue; }
@@ -356,12 +580,22 @@ static QString pretty_equation_from_tokens(const std::vector<std::string>& raw) 
         // ...
 
         // Parentheses: no extra spaces next to them
-        if (t == "(") {
-            // If previous token was a value or ')', you *might* want a space (optional)
-            // We keep it tight for a classic calculator look.
-            out += "(";
+        //if (t == "(") {
+        //    // If previous token was a value or ')', you *might* want a space (optional)
+        //    // We keep it tight for a classic calculator look.
+        //    out += "(";
+        //    continue;
+        //}
+
+        // collapse parenthesized negative literals here
+        if (isNegativeLiteral(toks, i)) {
+            QString neg = "-" + QString::fromStdString(toks[i + 2]);
+            // If next token is "^", parentheses will be added in next step
+            out += neg;
+            i += 3;
             continue;
         }
+
         if (t == ")") {
             out += ")";
             continue;
@@ -1215,42 +1449,32 @@ void MainWindow::on_button_equals_clicked() {
     last_answer = res;
     just_evaluated = true;
 
-    std::string result;
-    if (g_eval_div0) result = "undefined";
-    else            result = mpf_to_string(res, 34);
+    std::string raw = mpf_to_string(res, 80); // raw, high digits
+    std::string disp = g_eval_div0 ? "undefined" : format_for_display(res, 20, 20);
 
+    // show to user
     if (!last_eval_error.empty()) {
         ui->answerInputLabel->setText(QString::fromStdString(last_eval_error));
         last_eval_error.clear();
         return;
     }
-    else { 
-        ui->answerInputLabel->setText(QString::fromStdString(result)); 
+    else {
+        ui->answerInputLabel->setText(QString::fromStdString(disp));
     }
 
-    
-
-    //// prepare next
-    //equation_buffer.clear();
-    //numeric_input_buffer = { g_eval_div0 ? std::string("0") : result };
-    //number_is_negative = false;
-    //dp_used = false;
-
-    // Instead of clearing, set equation_buffer to previous answer tokens,
-    // so operator press can chain with last answer
+    // keep raw for chaining
     if (!g_eval_div0) {
-        std::string ans_str = mpf_to_string(last_answer, 34);
+        std::string ans_str = raw; // not disp
         equation_buffer.clear();
-        for (char ch : ans_str) {
-            equation_buffer.push_back(std::string(1, ch));
-        }
+        for (char ch : ans_str) equation_buffer.push_back(std::string(1, ch));
     }
     else {
-        equation_buffer.clear();
-        equation_buffer.push_back("0");
+        equation_buffer = { "0" };
     }
 
-    numeric_input_buffer = { g_eval_div0 ? std::string("0") : result };
+    // also keep raw in entry
+    numeric_input_buffer = { g_eval_div0 ? std::string("0") : raw };
+
     number_is_negative = false;
     dp_used = false;
 
@@ -1440,6 +1664,29 @@ void MainWindow::on_button_cosine_clicked() {
     updateDisplay();
 }
 void MainWindow::on_button_exponent_scientific_clicked() {
+    // Commit current number if present
+    if (!new_number) {
+        if (number_is_negative) { equation_buffer.push_back("("); equation_buffer.push_back("-"); }
+        for (const auto& c : numeric_input_buffer) equation_buffer.push_back(c);
+        if (number_is_negative) equation_buffer.push_back(")");
+        new_number = true;
+    }
+    else if (equation_buffer.empty()) {
+        // If nothing entered yet, start with 1 × 10^
+        equation_buffer.push_back("1");
+    }
+
+    // Append × 10 ^
+    equation_buffer.push_back("*");
+    equation_buffer.push_back("10");
+    equation_buffer.push_back("^");
+
+    // Prepare to type exponent
+    dp_used = false;
+    number_is_negative = false;
+    new_number = true;
+
+    updateDisplay();
 }
 void MainWindow::on_button_exponential_clicked() {
     // Commit current number before inserting ^
@@ -1462,37 +1709,107 @@ void MainWindow::on_button_exponential_clicked() {
 
     updateDisplay();
 }
+//void MainWindow::on_button_exponential_base10_clicked() {
+//    std::string x = concat_numeric_input_buffer_content();
+//
+//    // Prevent clearing the equation after abs() if we just finished "="
+//    just_evaluated_full = false;
+//
+//    equation_buffer.push_back("10");
+//    equation_buffer.push_back("^");
+//
+//    if (!new_number) {
+//        equation_buffer.push_back(x);
+//    }
+//
+//    new_number = true;
+//    updateDisplay();
+//}
 void MainWindow::on_button_exponential_base10_clicked() {
-    // Append "10 ^ (" then current number, then ")"
     std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the entire equation if we just finished "="
+    just_evaluated_full = false;
+
     equation_buffer.push_back("10");
     equation_buffer.push_back("^");
-    equation_buffer.push_back(x);
 
-    updateDisplay();
+    if (!new_number) {
+        // If the current entry is negative, wrap it in parentheses
+        if (number_is_negative || (!x.empty() && x[0] == '-')) {
+            equation_buffer.push_back("(");
+            equation_buffer.push_back("-");
+            for (size_t i = 1; i < x.size(); ++i) {
+                equation_buffer.push_back(std::string(1, x[i]));
+            }
+            equation_buffer.push_back(")");
+        }
+        else {
+            for (char c : x) {
+                equation_buffer.push_back(std::string(1, c));
+            }
+        }
+    }
+
     new_number = true;
+    updateDisplay();
 }
 void MainWindow::on_button_exponential_natural_clicked() {
     std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the entire equation if we just finished "="
+    just_evaluated_full = false;
+
     equation_buffer.push_back("FUNC_E");
     equation_buffer.push_back("^");
-    equation_buffer.push_back(x);
 
-    updateDisplay();
+    if (!new_number) {
+        // If the current entry is negative, wrap it in parentheses
+        if (number_is_negative || (!x.empty() && x[0] == '-')) {
+            equation_buffer.push_back("(");
+            equation_buffer.push_back("-");
+            for (size_t i = 1; i < x.size(); ++i) {
+                equation_buffer.push_back(std::string(1, x[i]));
+            }
+            equation_buffer.push_back(")");
+        }
+        else {
+            for (char c : x) {
+                equation_buffer.push_back(std::string(1, c));
+            }
+        }
+    }
+
     new_number = true;
+    updateDisplay();
 }
 void MainWindow::on_button_factorial_clicked() {
-    std::string x = concat_numeric_input_buffer_content();
+    /*std::string x = concat_numeric_input_buffer_content();
     equation_buffer.push_back("FUNC_FACT");
     equation_buffer.push_back("(");
     equation_buffer.push_back(x);
     equation_buffer.push_back(")");
-    updateDisplay();
+    updateDisplay();*/
+
+    std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after fact() if we just finished "="
+    just_evaluated_full = false;
+
+    equation_buffer.push_back("FUNC_FACT");
+    equation_buffer.push_back("(");
+    open_parens++; // track open '('
+
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance
+    }
 
     BigFloat v(x);
     long long n = static_cast<long long>(v.get_d());
     if (n < 0) {
-        ui->answerInputLabel->setText("Error: n! (n<0)");
+        ui->answerInputLabel->setText("Error: fact(n) (n<0)");
         return;
     }
 
@@ -1740,18 +2057,40 @@ void MainWindow::on_button_logarithm_natural_clicked() {
 }
 void MainWindow::on_button_modulus_clicked() {
 }
+//void MainWindow::on_button_percent_clicked() {
+//    // basic %: x -> x/100
+//    std::string x = concat_numeric_input_buffer_content();
+//    equation_buffer.push_back("FUNC_PERCENT");
+//    equation_buffer.push_back("(");
+//    equation_buffer.push_back(x);
+//    equation_buffer.push_back(")");
+//    updateDisplay();
+//
+//    BigFloat v(x);
+//    BigFloat r = v / 100;
+//    // load_entry_from_big(r);
+//
+//    new_number = true;
+//    number_is_negative = false;
+//    dp_used = false;
+//
+//    updateDisplay();
+//}
 void MainWindow::on_button_percent_clicked() {
-    // basic %: x -> x/100
     std::string x = concat_numeric_input_buffer_content();
+
+    // Prevent clearing the equation after %() if we just finished "="
+    just_evaluated_full = false;
+
     equation_buffer.push_back("FUNC_PERCENT");
     equation_buffer.push_back("(");
-    equation_buffer.push_back(x);
-    equation_buffer.push_back(")");
-    updateDisplay();
+    open_parens++; // keep track of unclosed '('
 
-    BigFloat v(x);
-    BigFloat r = v / 100;
-    // load_entry_from_big(r);
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--; // balance parentheses
+    }
 
     new_number = true;
     number_is_negative = false;
