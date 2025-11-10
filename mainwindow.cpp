@@ -862,20 +862,29 @@ static std::vector<std::string> expandDisplayFuncs(const std::vector<std::string
                     result = BigFloat(::tanh(inner.get_d()));
                 }
                 else if (t == "FUNC_ASINH") {
-                    result = BigFloat(::asinh(inner.get_d()));
+                    // principal value: ℝ → ℝ
+                    BigFloat r = BigFloat(std::asinh(inner.get_d()));
+                    result = r;
                 }
                 else if (t == "FUNC_ACOSH") {
+                    // domain: x >= 1
                     double v = inner.get_d();
                     if (v < 1.0) {
-                        last_eval_error = "Error: acosh domain [1,∞]";
-                        out.clear();
-                        out.push_back("0");
-                        continue;
+                        last_eval_error = "Error: acosh domain [1, +inf)";
+                        out.clear(); out.push_back("0"); continue;
                     }
-                    result = BigFloat(::acosh(v));
+                    BigFloat r = BigFloat(std::acosh(v));
+                    result = r;
                 }
                 else if (t == "FUNC_ATANH") {
-                    result = BigFloat(::atanh(inner.get_d()));
+                    // domain: |x| < 1
+                    double v = inner.get_d();
+                    if (!(v > -1.0 && v < 1.0)) {
+                        last_eval_error = "Error: atanh domain (-1, 1)";
+                        out.clear(); out.push_back("0"); continue;
+                    }
+                    BigFloat r = BigFloat(std::atanh(v));
+                    result = r;
                 }
                 else if (t == "FUNC_LN") {
                     double v = inner.get_d();
@@ -1957,11 +1966,52 @@ void MainWindow::on_button_inverse_cosine_clicked() {
 
     updateDisplay();
 }
-void MainWindow::on_button_inverse_hyp_cosine_clicked() {
-}
 void MainWindow::on_button_inverse_hyp_sine_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+    if (just_evaluated_full) { equation_buffer.clear(); just_evaluated_full = false; }
+
+    equation_buffer.push_back("FUNC_ASINH");
+    equation_buffer.push_back("(");
+    open_parens++;
+    if (!new_number) {                 // there is a number ready in the entry buffer
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--;
+    }
+    new_number = true; number_is_negative = false; dp_used = false;
+    updateDisplay();
 }
+
+void MainWindow::on_button_inverse_hyp_cosine_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+    if (just_evaluated_full) { equation_buffer.clear(); just_evaluated_full = false; }
+
+    equation_buffer.push_back("FUNC_ACOSH");
+    equation_buffer.push_back("(");
+    open_parens++;
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--;
+    }
+    new_number = true; number_is_negative = false; dp_used = false;
+    updateDisplay();
+}
+
 void MainWindow::on_button_inverse_hyp_tangent_clicked() {
+    std::string x = concat_numeric_input_buffer_content();
+    if (just_evaluated_full) { equation_buffer.clear(); just_evaluated_full = false; }
+
+    equation_buffer.push_back("FUNC_ATANH");
+    equation_buffer.push_back("(");
+    open_parens++;
+    if (!new_number) {
+        equation_buffer.push_back(x);
+        equation_buffer.push_back(")");
+        open_parens--;
+    }
+    new_number = true; number_is_negative = false; dp_used = false;
+    updateDisplay();
 }
 void MainWindow::on_button_inverse_sine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
