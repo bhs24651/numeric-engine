@@ -1592,7 +1592,11 @@ void MainWindow::on_button_absolute_value_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after abs() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_ABS");
     equation_buffer.push_back("(");
@@ -1645,7 +1649,11 @@ void MainWindow::on_button_cosine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after sin() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_COS");
     equation_buffer.push_back("(");
@@ -1664,6 +1672,11 @@ void MainWindow::on_button_cosine_clicked() {
     updateDisplay();
 }
 void MainWindow::on_button_exponent_scientific_clicked() {
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
     // Commit current number if present
     if (!new_number) {
         if (number_is_negative) { equation_buffer.push_back("("); equation_buffer.push_back("-"); }
@@ -1688,7 +1701,12 @@ void MainWindow::on_button_exponent_scientific_clicked() {
 
     updateDisplay();
 }
-void MainWindow::on_button_exponential_clicked() {
+void MainWindow::on_button_exponential_clicked()
+{
+    // Prevent buffer clearing after "="
+    just_evaluated_full = false;
+    just_evaluated = false;
+
     // Commit current number before inserting ^
     if (!new_number) {
         if (number_is_negative) equation_buffer.push_back("(");
@@ -1729,7 +1747,11 @@ void MainWindow::on_button_exponential_base10_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the entire equation if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("10");
     equation_buffer.push_back("^");
@@ -1758,7 +1780,10 @@ void MainWindow::on_button_exponential_natural_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the entire equation if we just finished "="
-    just_evaluated_full = false;
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_E");
     equation_buffer.push_back("^");
@@ -1794,7 +1819,10 @@ void MainWindow::on_button_factorial_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after fact() if we just finished "="
-    just_evaluated_full = false;
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_FACT");
     equation_buffer.push_back("(");
@@ -1829,7 +1857,11 @@ void MainWindow::on_button_hyp_cosine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after cosh() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_COSH");
     equation_buffer.push_back("(");
@@ -1851,7 +1883,11 @@ void MainWindow::on_button_hyp_sine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after sinh() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_SINH");
     equation_buffer.push_back("(");
@@ -1873,7 +1909,11 @@ void MainWindow::on_button_hyp_tangent_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after tanh() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_TANH");
     equation_buffer.push_back("(");
@@ -1895,7 +1935,11 @@ void MainWindow::on_button_inverse_cosine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after acos() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_ACOS");
     equation_buffer.push_back("(");
@@ -1923,7 +1967,11 @@ void MainWindow::on_button_inverse_sine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after asin() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_ASIN");
     equation_buffer.push_back("(");
@@ -1945,7 +1993,11 @@ void MainWindow::on_button_inverse_tangent_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after atan() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_ATAN");
     equation_buffer.push_back("(");
@@ -1991,7 +2043,11 @@ void MainWindow::on_button_logarithm_common_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after log() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_LOG10");
     equation_buffer.push_back("(");
@@ -2037,7 +2093,11 @@ void MainWindow::on_button_logarithm_natural_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after log() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_LN");
     equation_buffer.push_back("(");
@@ -2080,7 +2140,11 @@ void MainWindow::on_button_percent_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after %() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_PERCENT");
     equation_buffer.push_back("(");
@@ -2104,7 +2168,11 @@ void MainWindow::on_button_reciprocal_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after reciprocal() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_RECIP");
     equation_buffer.push_back("(");
@@ -2126,7 +2194,11 @@ void MainWindow::on_button_sine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after sin() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_SIN");
     equation_buffer.push_back("(");
@@ -2166,7 +2238,11 @@ void MainWindow::on_button_square_root_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after sin() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_SQRT");
     equation_buffer.push_back("(");
@@ -2188,7 +2264,11 @@ void MainWindow::on_button_tangent_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after sin() if we just finished "="
-    just_evaluated_full = false;
+    // Prevent previous number from persisting in function 
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
 
     equation_buffer.push_back("FUNC_TAN");
     equation_buffer.push_back("(");
