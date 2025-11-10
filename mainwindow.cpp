@@ -10,7 +10,11 @@
 
 #include <gmp.h> // to handle the Arithmetic
 #include <gmpxx.h>   // <-- add (C++ API; keep <gmp.h> or remove if unused)
+#include <cctype>
 #include <cmath>
+#include <sstream>    // for std::ostringstream
+#include <iomanip>    // for std::fixed and std::setprecision
+#include <random>
 
 #include <string> // Some other helpful dependencies
 #include <vector>
@@ -69,40 +73,59 @@ static std::vector<std::string> tokenizeInfix(const std::string& s) {
     std::vector<std::string> out;
     auto isop = [](char c) { return c == '+' || c == '-' || c == '*' || c == '/' || c == '^'; };
     const size_t n = s.size();
+
     for (size_t i = 0; i < n; ++i) {
         char c = s[i];
         if (std::isspace(static_cast<unsigned char>(c))) continue;
+
         if (std::isdigit(static_cast<unsigned char>(c)) || c == '.') {
             std::string num;
             while (i < n && (std::isdigit(static_cast<unsigned char>(s[i])) || s[i] == '.')) num += s[i++];
             --i; out.push_back(num);
         }
+        else if (std::isalpha(static_cast<unsigned char>(c))) {
+            // read identifier
+            std::string id;
+            while (i < n && std::isalpha(static_cast<unsigned char>(s[i]))) {
+                id.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(s[i]))));
+                ++i;
+            }
+            --i;
+            if (id == "mod") out.push_back("mod");
+            // (ignore other identifiers here; function calls get expanded earlier)
+        }
         else if (c == '(' || c == ')') {
             out.emplace_back(1, c);
         }
         else if (isop(c)) {
+            // unary minus detection (allow after any operator or '(')
             bool unary = false;
             if (c == '-') {
                 if (out.empty()) unary = true;
                 else {
                     const std::string& prev = out.back();
-                    if (prev == "(" || prev == "+" || prev == "-" || prev == "*" || prev == "/") unary = true;
+                    if (prev == "(" || prev == "+" || prev == "-" || prev == "*" || prev == "/" || prev == "^" || prev == "mod")
+                        unary = true;
                 }
             }
-            if (unary) out.push_back("u-"); else out.emplace_back(1, c);
+            if (unary) out.push_back("u-");
+            else out.emplace_back(1, c);
         }
     }
     return out;
 }
 
 static int prec(const std::string& op) {
-    if (op == "u-") return 4; // unary minus highest
-    if (op == "^")  return 3; // higher than * and /
-    if (op == "*" || op == "/") return 2;
+    if (op == "u-") return 4;
+    if (op == "^")  return 3;
+    if (op == "*" || op == "/" || op == "mod") return 2;   // ← added
     if (op == "+" || op == "-") return 1;
     return 0;
 }
-static bool isOp(const std::string& t) { return t == "+" || t == "-" || t == "*" || t == "/" || t == "^" || t == "u-"; }
+
+static bool isOp(const std::string& t) {
+    return t == "+" || t == "-" || t == "*" || t == "/" || t == "^" || t == "u-" || t == "mod"; // ← added
+}
 
 static std::vector<std::string> infixToPostfix(const std::vector<std::string>& toks) {
     std::vector<std::string> out; out.reserve(toks.size());
@@ -172,6 +195,17 @@ static BigFloat evalPostfix(const std::vector<std::string>& rpn) {
             else {
                 // fallback for non-integer exponents
                 st.push_back(BigFloat(::pow(a.get_d(), b.get_d())));
+            }
+        }
+        else if (t == "mod") {
+            if (b == 0) {              // x mod 0 → “undefined” like division by zero
+                g_eval_div0 = true;
+                st.push_back(BigFloat(0));
+            }
+            else {
+                // C/C++ fmod semantics: sign follows the dividend (a)
+                double r = std::fmod(a.get_d(), b.get_d());
+                st.push_back(BigFloat(r));
             }
         }
     }
@@ -664,18 +698,28 @@ static BigFloat big_pi() {
 }
 
 // angle unit helpers
-AngleUnit MainWindow::currentAngleUnit() const {
-    int idx = ui->angleUnitSelection->currentIndex();
-    if (idx == 1) return ANG_RAD;
-    if (idx == 2) return ANG_GRAD;
-    return ANG_DEG;
-}
+// --- Global angle mode (mirrors the combo box) ---
+static AngleUnit g_angle_unit = ANG_DEG;
 
-static BigFloat deg_to_rad(const BigFloat& d) {
-    return d * big_pi() / 180;
+// --- Conversions ---
+static BigFloat rad_to_deg(const BigFloat& r) { return r * 180 / big_pi(); }
+static BigFloat rad_to_grad(const BigFloat& r) { return r * 200 / big_pi(); }
+static BigFloat deg_to_rad(const BigFloat& d) { return d * big_pi() / 180; }
+static BigFloat grad_to_rad(const BigFloat& g) { return g * big_pi() / 200; }
+
+static BigFloat to_radians(const BigFloat& v) {
+    switch (g_angle_unit) {
+    case ANG_RAD:  return v;
+    case ANG_GRAD: return grad_to_rad(v);
+    default:       return deg_to_rad(v);
+    }
 }
-static BigFloat grad_to_rad(const BigFloat& g) {
-    return g * big_pi() / 200;
+static BigFloat from_radians(const BigFloat& r) {
+    switch (g_angle_unit) {
+    case ANG_RAD:  return r;
+    case ANG_GRAD: return rad_to_grad(r);
+    default:       return rad_to_deg(r);
+    }
 }
 
 // Replace your previous expandDisplayFuncs implementation with this:
@@ -802,25 +846,17 @@ static std::vector<std::string> expandDisplayFuncs(const std::vector<std::string
                 BigFloat result = inner;
 
                 // Apply the function
+                // circular trig (inputs depend on unit)
                 if (t == "FUNC_SIN") {
-                    BigFloat vrad;
-                    // For evaluation time, assume degrees if UI set to degrees
-                    // Note: currentAngleUnit() is a member; use ANG_DEG default if not accessible here.
-                    // We'll call the global helper — but this function is static; we'll approximate by assuming degrees
-                    // If you prefer exact member access, change to a non-static helper that reads UI; for now, default to degrees handling outside.
-                    // We'll convert assuming ANG_DEG is the default global mode. To be safe, attempt to use deg_to_rad via currentAngleUnit sentinel:
-                    // Here: assume degrees by default (deg_to_rad defined above)
-                    // To use actual angle unit, you may want to expose a global currentAngle variable. For now use degrees as in original code path used get_d() callers.
-                    // We will convert using deg_to_rad to mirror earlier handlers (you can change as needed).
-                    vrad = deg_to_rad(inner);
+                    BigFloat vrad = to_radians(inner);
                     result = BigFloat(::sin(vrad.get_d()));
                 }
                 else if (t == "FUNC_COS") {
-                    BigFloat vrad = deg_to_rad(inner);
+                    BigFloat vrad = to_radians(inner);
                     result = BigFloat(::cos(vrad.get_d()));
                 }
                 else if (t == "FUNC_TAN") {
-                    BigFloat vrad = deg_to_rad(inner);
+                    BigFloat vrad = to_radians(inner);
                     result = BigFloat(::tan(vrad.get_d()));
                 }
                 /*else if (t == "FUNC_ASIN") {
@@ -829,28 +865,28 @@ static std::vector<std::string> expandDisplayFuncs(const std::vector<std::string
                 else if (t == "FUNC_ACOS") {
                     result = BigFloat(::acos(inner.get_d()));
                 }*/
+                // inverse circular trig (outputs shown in selected unit)
                 else if (t == "FUNC_ASIN") {
                     double v = inner.get_d();
                     if (v < -1.0 || v > 1.0) {
                         last_eval_error = "Error: asin domain [-1,1]";
-                        out.clear();
-                        out.push_back("0");
-                        continue;
+                        out.clear(); out.push_back("0"); continue;
                     }
-                    result = BigFloat(::asin(v));
+                    BigFloat r = BigFloat(::asin(v));      // radians
+                    result = from_radians(r);
                 }
                 else if (t == "FUNC_ACOS") {
                     double v = inner.get_d();
                     if (v < -1.0 || v > 1.0) {
                         last_eval_error = "Error: acos domain [-1,1]";
-                        out.clear();
-                        out.push_back("0");
-                        continue;
+                        out.clear(); out.push_back("0"); continue;
                     }
-                    result = BigFloat(::acos(v));
+                    BigFloat r = BigFloat(::acos(v));      // radians
+                    result = from_radians(r);
                 }
                 else if (t == "FUNC_ATAN") {
-                    result = BigFloat(::atan(inner.get_d()));
+                    BigFloat r = BigFloat(::atan(inner.get_d()));  // radians
+                    result = from_radians(r);
                 }
                 else if (t == "FUNC_SINH") {
                     result = BigFloat(::sinh(inner.get_d()));
@@ -1340,7 +1376,7 @@ void MainWindow::on_button_n8_clicked() { appendDigit("8"); }
 void MainWindow::on_button_n9_clicked() { appendDigit("9"); }
 
 static inline bool isOpToken(const std::string& t) {
-    return t == "+" || t == "-" || t == "*" || t == "/";
+    return t == "+" || t == "-" || t == "*" || t == "/" || t == "mod"; // ← add "mod"
 }
 
 void MainWindow::appendOperator(const std::string& op) {
@@ -1432,7 +1468,9 @@ void MainWindow::on_button_equals_clicked() {
     open_parens = 0;
 
     // strip trailing op
-    auto isOpToken = [](const std::string& t) { return t == "+" || t == "-" || t == "*" || t == "/"; };
+    auto isOpToken = [](const std::string& t) {
+        return t == "+" || t == "-" || t == "*" || t == "/" || t == "mod"; // ← add "mod"
+        };
     if (!eval_tokens.empty() && isOpToken(eval_tokens.back()))
         eval_tokens.pop_back();
 
@@ -1589,12 +1627,13 @@ void MainWindow::on_button_parentheses_right_clicked() {
 // Buttons only in Scientific View
 
 void MainWindow::on_angleUnitSelection_activated(int i) {
-    // TODO: add angle unit selection logic here
-    /*
-        i=0 is Degrees  (Deg)
-        i=1 is Radians  (Rad)
-        i=2 is Gradians (Grad)
-    */
+    // 0 = Deg, 1 = Rad, 2 = Grad
+    if (i == 1)      g_angle_unit = ANG_RAD;
+    else if (i == 2) g_angle_unit = ANG_GRAD;
+    else             g_angle_unit = ANG_DEG;
+
+    // Optional: re-render current display so inverse trig answers show in the new unit
+    updateDisplay();
 }
 
 void MainWindow::on_button_absolute_value_clicked() {
@@ -2166,6 +2205,7 @@ void MainWindow::on_button_logarithm_natural_clicked() {
     updateDisplay();
 }
 void MainWindow::on_button_modulus_clicked() {
+    appendOperator(" mod ");  // same flow as +, -, *, /
 }
 //void MainWindow::on_button_percent_clicked() {
 //    // basic %: x -> x/100
@@ -2212,7 +2252,35 @@ void MainWindow::on_button_percent_clicked() {
 
     updateDisplay();
 }
+
+
 void MainWindow::on_button_random_number_clicked() {
+    if (just_evaluated_full) {
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
+
+    // Generate random double in [0,1)
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_real_distribution<double> dist(0.0, 1.0);
+
+    double r = dist(gen);
+
+    // Format to 20 digits after the decimal point
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(20) << r;
+    std::string s = oss.str();
+
+    // Load into display / entry
+    BigFloat v(s);
+    load_entry_from_big(v);
+
+    new_number = false;
+    number_is_negative = (r < 0);
+    dp_used = (std::floor(r) != r);
+
+    updateDisplay();
 }
 void MainWindow::on_button_reciprocal_clicked() {
     std::string x = concat_numeric_input_buffer_content();
