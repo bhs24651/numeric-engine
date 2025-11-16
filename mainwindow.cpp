@@ -282,7 +282,7 @@ static std::string format_scientific_e(const mpf_class& x, int sig_digits) {
     // request one guard digit so we can round correctly ourselves
     std::string digits = ax.get_str(exp10, 10, sig_digits + 1); // pure digits, no '.'
 
-    round_digit_mantissa(digits, sig_digits);
+    // round_digit_mantissa(digits, sig_digits);
     if ((int)digits.size() > sig_digits) {
         // rounding inserted a new leading '1' -> increase exponent
         exp10 += 1;
@@ -327,10 +327,10 @@ static std::string format_scientific(const mpf_class& x, int sig_digits) {
 }
 
 static std::string format_for_display(const mpf_class& x,
-    int max_decimals = 20,
-    int sci_sig = 20,
-    int sci_pos_thresh = 9,   // |x| >= 1e9
-    int sci_neg_thresh = -9)  // |x| <= 1e-9
+    int max_decimals = 21,
+    int sci_sig = 21,
+    int sci_pos_thresh = 20,   // |x| >= 1e20
+    int sci_neg_thresh = -5)  // |x| <= 1e-5
 {
     if (x == 0) return "0";
     mp_exp_t e = 0;
@@ -542,6 +542,7 @@ static QString pretty_equation_from_tokens(const std::vector<std::string>& raw) 
 
         // --- display-only funcs ---
         if (t == "FUNC_ABS") { out += "abs";   continue; }
+        if (t == "ANS") { out += "Ans"; continue; }
         if (t == "FUNC_PI") { out += "π";     continue; }
         if (t == "FUNC_E") { out += "e";     continue; }
         if (t == "FUNC_SIN") { out += "sin";   continue; }
@@ -743,6 +744,13 @@ static std::vector<std::string> expandDisplayFuncs(const std::vector<std::string
     size_t n = toks.size();
     for (size_t i = 0; i < n; ++i) {
         const std::string& t = toks[i];
+
+        // Always expand ANS to its numeric digits for later evaluation.
+        if (t == "ANS") {
+            std::string s = mpf_to_string(last_answer, 34);
+            for (char ch : s) out.push_back(std::string(1, ch));
+            continue;
+        }
 
         // Always expand FUNC_PI and FUNC_E to their numeric values
         if (t == "FUNC_PI") {
@@ -1405,10 +1413,17 @@ void MainWindow::appendOperator(const std::string& op) {
         equation_buffer.pop_back();
     }
 
+    //if (just_evaluated) {
+    //    // Automatically use last answer
+    //    std::string ans_str = mpf_to_string(last_answer, 34);
+    //    equation_buffer = { ans_str, " " };
+    //    just_evaluated = false;
+    //}
     if (just_evaluated) {
-        // Automatically use last answer
-        std::string ans_str = mpf_to_string(last_answer, 34);
-        equation_buffer = { ans_str, " " };
+        // Symbolically use last answer. Display will show "Ans" and
+        // evaluation will later expand "ANS" to the numeric value.
+        equation_buffer.clear();
+        equation_buffer.push_back("ANS");
         just_evaluated = false;
     }
 
@@ -1449,7 +1464,13 @@ void MainWindow::on_button_negate_clicked() {
 
 void MainWindow::on_button_ans_clicked() {
     // Put last_answer into the entry (like most calculators do)
-    load_entry_from_big(last_answer);
+    if (just_evaluated_full) {
+        // Symbolically use last answer. Display will show "Ans" and
+        // evaluation will later expand "ANS" to the numeric value.
+        equation_buffer.clear();
+        just_evaluated_full = false;
+    }
+    equation_buffer.push_back("ANS");
     updateDisplay();
 }
 
@@ -1509,11 +1530,21 @@ void MainWindow::on_button_equals_clicked() {
         ui->answerInputLabel->setText(QString::fromStdString(disp));
     }
 
-    // keep raw for chaining
+    //// keep raw for chaining
+    //if (!g_eval_div0) {
+    //    std::string ans_str = raw; // not disp
+    //    equation_buffer.clear();
+    //    for (char ch : ans_str) equation_buffer.push_back(std::string(1, ch));
+    //}
+    //else {
+    //    equation_buffer = { "0" };
+    //}
+        
+    // keep symbolic ANS for chaining (displayed as "Ans"); evaluator will
+    // replace ANS with the numeric value when needed.
     if (!g_eval_div0) {
-        std::string ans_str = raw; // not disp
         equation_buffer.clear();
-        for (char ch : ans_str) equation_buffer.push_back(std::string(1, ch));
+        equation_buffer.push_back("ANS");
     }
     else {
         equation_buffer = { "0" };
