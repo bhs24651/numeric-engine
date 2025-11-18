@@ -275,31 +275,39 @@ static void round_digit_mantissa(std::string& d, int keep) {
 
 static std::string format_scientific_e(const mpf_class& x, int sig_digits) {
     if (x == 0) return "0";
-    bool neg = (x < 0);
-    mpf_class ax = neg ? -x : x;
 
     mp_exp_t exp10 = 0;
-    // request one guard digit so we can round correctly ourselves
-    std::string digits = ax.get_str(exp10, 10, sig_digits + 1); // pure digits, no '.'
+    std::string mant = x.get_str(exp10, 10, sig_digits + 2); // a little headroom
+    bool neg = (!mant.empty() && mant[0] == '-');
+    if (neg) mant.erase(mant.begin());
 
-    // round_digit_mantissa(digits, sig_digits);
-    if ((int)digits.size() > sig_digits) {
-        // rounding inserted a new leading '1' -> increase exponent
-        exp10 += 1;
+    // mant like "12345..." with exp10 meaning 1.2345... × 10^(exp10-1)
+    std::string m = mant;
+    if (m.size() > 1) {
+        m.insert(m.begin() + 1, '.');  // 1.xxx
     }
 
-    // Build mantissa: 1.xxx (trim trailing zeros and dot)
-    std::string mant;
-    mant.push_back(digits[0]);
-    if (sig_digits > 1) {
-        mant.push_back('.');
-        mant.append(digits.begin() + 1, digits.end());
-        while (!mant.empty() && mant.back() == '0') mant.pop_back();
-        if (!mant.empty() && mant.back() == '.') mant.pop_back();
+    // trim decimals to sig_digits total significant figures
+    if (auto p = m.find('.'); p != std::string::npos) {
+        // keep: 1 digit, '.', and (sig_digits - 1) decimal digits
+        size_t keep = 1 + 1 + (sig_digits - 1);
+        if (m.size() > keep) m.resize(keep);
+
+        // strip trailing zeros and possible trailing '.'
+        while (!m.empty() && m.back() == '0') m.pop_back();
+        if (!m.empty() && m.back() == '.') m.pop_back();
     }
 
     long e = static_cast<long>(exp10) - 1;
-    return std::string(neg ? "-" : "") + mant + "e" + (e >= 0 ? "+" : "") + std::to_string(e);
+
+    std::string out;
+    if (neg) out.push_back('-');
+    out += m;
+    out += 'e';
+    if (e >= 0) out.push_back('+');
+    out += std::to_string(e);
+
+    return out;
 }
 
 static std::string format_scientific(const mpf_class& x, int sig_digits) {
@@ -326,24 +334,74 @@ static std::string format_scientific(const mpf_class& x, int sig_digits) {
     return std::string(neg ? "-" : "") + m + " × 10^" + std::to_string(e);
 }
 
+static std::string shrink_for_display(const std::string& s, std::size_t max_chars = 24)
+{
+    if (s.size() <= max_chars) return s;
+
+    // Look for scientific 'e' notation
+    std::size_t epos = s.find('e');
+    if (epos == std::string::npos) {
+        // Not scientific: just hard truncate from the right
+        return s.substr(0, max_chars);
+    }
+
+    // Split into mantissa (with sign) and exponent
+    std::string mant = s.substr(0, epos);   // e.g. "-1.23456789"
+    std::string exp = s.substr(epos);      // e.g. "e+12345"
+
+    // While the whole thing is too long, try to drop fractional digits
+    while (mant.size() + exp.size() > max_chars) {
+        // Find decimal point in mantissa
+        std::size_t dot = mant.find('.');
+        if (dot == std::string::npos) {
+            // No decimal point → nothing fractional to drop
+            break;
+        }
+        if (mant.size() <= dot + 1) {
+            // Nothing after "." to drop
+            break;
+        }
+
+        // Drop one character from the end (a fractional digit)
+        mant.pop_back();
+
+        // Clean up trailing zeros and possibly the '.' itself
+        while (!mant.empty() && mant.back() == '0') mant.pop_back();
+        if (!mant.empty() && mant.back() == '.') mant.pop_back();
+    }
+
+    std::string out = mant + exp;
+
+    // As a last resort (huge exponents), just hard truncate
+    if (out.size() > max_chars)
+        out.resize(max_chars);
+
+    return out;
+}
+
 static std::string format_for_display(const mpf_class& x,
     int max_decimals = 21,
     int sci_sig = 21,
     int sci_pos_thresh = 20,   // |x| >= 1e20
-    int sci_neg_thresh = -5)  // |x| <= 1e-5
+    int sci_neg_thresh = -5)   // |x| <= 1e-5
 {
     if (x == 0) return "0";
     mp_exp_t e = 0;
     (void)x.get_str(e, 10, 2);
     long exp10 = static_cast<long>(e) - 1;
 
+    std::string s;
     if (exp10 >= sci_pos_thresh || exp10 <= sci_neg_thresh) {
-        // CHANGED: use e-notation with correct rounding
-        return format_scientific_e(x, sci_sig);
+        // e-notation
+        s = format_scientific_e(x, sci_sig);
     }
     else {
-        return format_fixed(x, max_decimals);
+        // fixed notation
+        s = format_fixed(x, max_decimals);
     }
+
+    // Enforce max display width (24 chars)
+    return shrink_for_display(s, 24);
 }
 
 // GMP string formatter (no iostream precision quirks)
@@ -473,6 +531,13 @@ static bool isNumberToken(const std::string& s) {
         return false;
     }
     return true;
+}
+
+static bool isValueLikeToken(const std::string& t) {
+    if (t == ")" || t == "ANS" || t == "FUNC_PI" || t == "FUNC_E")
+        return true;
+    // Treat a plain numeric token as a value too
+    return isNumberToken(t);
 }
 
 // Detect the exact token sequence: "(" "-" <number> ")"
@@ -1388,7 +1453,10 @@ static inline bool isOpToken(const std::string& t) {
 }
 
 void MainWindow::appendOperator(const std::string& op) {
-    // reset just_evaluated_full flag
+    // Did we *just* finish a full evaluation with '='?
+    bool was_full_eval = just_evaluated_full;
+
+    // Reset the flag so subsequent ops behave normally
     if (just_evaluated_full) {
         just_evaluated_full = false;
     }
@@ -1398,7 +1466,6 @@ void MainWindow::appendOperator(const std::string& op) {
         equation_buffer.push_back("0");
     }
 
-
     // Commit current number if present
     if (!new_number) {
         if (number_is_negative) equation_buffer.push_back("(");
@@ -1407,21 +1474,13 @@ void MainWindow::appendOperator(const std::string& op) {
         if (number_is_negative) equation_buffer.push_back(")");
     }
 
-
     // Collapse any trailing operators; keep only the last one pressed
     while (!equation_buffer.empty() && isOpToken(equation_buffer.back())) {
         equation_buffer.pop_back();
     }
 
-    //if (just_evaluated) {
-    //    // Automatically use last answer
-    //    std::string ans_str = mpf_to_string(last_answer, 34);
-    //    equation_buffer = { ans_str, " " };
-    //    just_evaluated = false;
-    //}
     if (just_evaluated) {
-        // Symbolically use last answer. Display will show "Ans" and
-        // evaluation will later expand "ANS" to the numeric value.
+        // Symbolically use last answer as ANS
         equation_buffer.clear();
         equation_buffer.push_back("ANS");
         just_evaluated = false;
@@ -1430,14 +1489,20 @@ void MainWindow::appendOperator(const std::string& op) {
     // Add operator
     equation_buffer.push_back(op);
 
-
     // Reset for next input
     dp_used = false;
     new_number = true;
     number_is_negative = false;
 
-
-    updateDisplay();
+    if (was_full_eval) {
+        // We've already shown the nicely formatted result in answerInputLabel.
+        // Only refresh the equation line (e.g. "Ans +").
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        // Normal behavior: update both equation and current-entry display.
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_add_clicked() { appendOperator("+"); }
 void MainWindow::on_button_subtract_clicked() { appendOperator("-"); }
@@ -1463,14 +1528,34 @@ void MainWindow::on_button_negate_clicked() {
 }
 
 void MainWindow::on_button_ans_clicked() {
-    // Put last_answer into the entry (like most calculators do)
+    // If we just did a full evaluation with '=', start from that result symbolically
     if (just_evaluated_full) {
-        // Symbolically use last answer. Display will show "Ans" and
-        // evaluation will later expand "ANS" to the numeric value.
         equation_buffer.clear();
         just_evaluated_full = false;
     }
+
+    // Commit any currently typed number first
+    if (!new_number) {
+        if (number_is_negative) equation_buffer.push_back("(");
+        if (number_is_negative) equation_buffer.push_back("-");
+        for (const auto& c : numeric_input_buffer)
+            equation_buffer.push_back(c);
+        if (number_is_negative) equation_buffer.push_back(")");
+        new_number = true;
+    }
+
+    // If previous token is a value (number, ANS, π, e, or ")"), insert implicit "*"
+    if (!equation_buffer.empty() && isValueLikeToken(equation_buffer.back())) {
+        equation_buffer.push_back("*");
+    }
+
     equation_buffer.push_back("ANS");
+
+    // Treat it as a completed value
+    new_number = true;
+    number_is_negative = false;
+    dp_used = false;
+
     updateDisplay();
 }
 
@@ -1539,7 +1624,7 @@ void MainWindow::on_button_equals_clicked() {
     //else {
     //    equation_buffer = { "0" };
     //}
-        
+
     // keep symbolic ANS for chaining (displayed as "Ans"); evaluator will
     // replace ANS with the numeric value when needed.
     if (!g_eval_div0) {
@@ -1623,8 +1708,8 @@ void MainWindow::on_button_parentheses_left_clicked() {
 
     char lc = lastChar();
     bool afterOpOrStart =
-    (lc == 0 || lc == '(' || lc == '+' || lc == '-' ||
-    lc == '*' || lc == '/' || lc == '^' || lc == ',');
+        (lc == 0 || lc == '(' || lc == '+' || lc == '-' ||
+            lc == '*' || lc == '/' || lc == '^' || lc == ',');
 
     if (afterOpOrStart) {
         push_open();
@@ -1674,7 +1759,7 @@ void MainWindow::on_button_absolute_value_clicked() {
 
     // Prevent clearing the equation after abs() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -1693,45 +1778,86 @@ void MainWindow::on_button_absolute_value_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_constant_e_clicked() {
+    // If we just finished "=", start a fresh equation
     if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
 
+    // If a number is currently being typed, commit it to the equation
+    if (!new_number) {
+        if (number_is_negative) equation_buffer.push_back("(");
+        if (number_is_negative) equation_buffer.push_back("-");
+        for (const auto& c : numeric_input_buffer)
+            equation_buffer.push_back(c);
+        if (number_is_negative) equation_buffer.push_back(")");
+        new_number = true;
+    }
+
+    // If previous token is a value (number, ANS, π, e, or ")"), insert implicit "*"
+    if (!equation_buffer.empty() && isValueLikeToken(equation_buffer.back())) {
+        equation_buffer.push_back("*");
+    }
+
+    // Append e as a symbolic constant
     equation_buffer.push_back("FUNC_E");
 
+    // Reset entry state
     new_number = true;
     just_evaluated = false;
     dp_used = false;
+    number_is_negative = false;
 
     updateDisplay();
 }
 void MainWindow::on_button_constant_pi_clicked() {
-    // Start a new equation if we just finished one
+    // Start a new equation if we just finished one with '='
     if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
 
-    // Append π as a numeric constant
+    // Commit current number if the user was typing one
+    if (!new_number) {
+        if (number_is_negative) equation_buffer.push_back("(");
+        if (number_is_negative) equation_buffer.push_back("-");
+        for (const auto& c : numeric_input_buffer)
+            equation_buffer.push_back(c);
+        if (number_is_negative) equation_buffer.push_back(")");
+        new_number = true;
+    }
+
+    // Implicit multiplication if previous token is a value
+    if (!equation_buffer.empty() && isValueLikeToken(equation_buffer.back())) {
+        equation_buffer.push_back("*");
+    }
+
+    // Append π as symbolic constant
     equation_buffer.push_back("FUNC_PI");
 
-    // Treat it as a complete number entry
+    // Reset entry state
     new_number = true;
     just_evaluated = false;
     dp_used = false;
+    number_is_negative = false;
 
     updateDisplay();
 }
+
 void MainWindow::on_button_cosine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after sin() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -1750,11 +1876,16 @@ void MainWindow::on_button_cosine_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_exponent_scientific_clicked() {
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -1780,10 +1911,19 @@ void MainWindow::on_button_exponent_scientific_clicked() {
     number_is_negative = false;
     new_number = true;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_exponential_clicked()
 {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
+        just_evaluated_full = false;
+    }
+
     // Prevent buffer clearing after "="
     just_evaluated_full = false;
     just_evaluated = false;
@@ -1806,7 +1946,12 @@ void MainWindow::on_button_exponential_clicked()
     number_is_negative = false;
     new_number = true;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 //void MainWindow::on_button_exponential_base10_clicked() {
 //    std::string x = concat_numeric_input_buffer_content();
@@ -1829,7 +1974,7 @@ void MainWindow::on_button_exponential_base10_clicked() {
 
     // Prevent clearing the entire equation if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -1855,13 +2000,18 @@ void MainWindow::on_button_exponential_base10_clicked() {
     }
 
     new_number = true;
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_exponential_natural_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the entire equation if we just finished "="
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -1887,7 +2037,12 @@ void MainWindow::on_button_exponential_natural_clicked() {
     }
 
     new_number = true;
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_factorial_clicked() {
     /*std::string x = concat_numeric_input_buffer_content();
@@ -1900,7 +2055,7 @@ void MainWindow::on_button_factorial_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after fact() if we just finished "="
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -1932,14 +2087,19 @@ void MainWindow::on_button_factorial_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_hyp_cosine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after cosh() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -1958,14 +2118,19 @@ void MainWindow::on_button_hyp_cosine_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_hyp_sine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after sinh() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -1984,14 +2149,19 @@ void MainWindow::on_button_hyp_sine_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_hyp_tangent_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after tanh() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -2010,14 +2180,19 @@ void MainWindow::on_button_hyp_tangent_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_inverse_cosine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after acos() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -2036,11 +2211,16 @@ void MainWindow::on_button_inverse_cosine_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_inverse_hyp_sine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
-    if (just_evaluated_full) { equation_buffer.clear(); just_evaluated_full = false; }
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) { equation_buffer.clear(); just_evaluated_full = false; }
 
     equation_buffer.push_back("FUNC_ASINH");
     equation_buffer.push_back("(");
@@ -2051,12 +2231,17 @@ void MainWindow::on_button_inverse_hyp_sine_clicked() {
         open_parens--;
     }
     new_number = true; number_is_negative = false; dp_used = false;
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 
 void MainWindow::on_button_inverse_hyp_cosine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
-    if (just_evaluated_full) { equation_buffer.clear(); just_evaluated_full = false; }
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) { equation_buffer.clear(); just_evaluated_full = false; }
 
     equation_buffer.push_back("FUNC_ACOSH");
     equation_buffer.push_back("(");
@@ -2067,12 +2252,17 @@ void MainWindow::on_button_inverse_hyp_cosine_clicked() {
         open_parens--;
     }
     new_number = true; number_is_negative = false; dp_used = false;
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 
 void MainWindow::on_button_inverse_hyp_tangent_clicked() {
     std::string x = concat_numeric_input_buffer_content();
-    if (just_evaluated_full) { equation_buffer.clear(); just_evaluated_full = false; }
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) { equation_buffer.clear(); just_evaluated_full = false; }
 
     equation_buffer.push_back("FUNC_ATANH");
     equation_buffer.push_back("(");
@@ -2083,14 +2273,19 @@ void MainWindow::on_button_inverse_hyp_tangent_clicked() {
         open_parens--;
     }
     new_number = true; number_is_negative = false; dp_used = false;
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_inverse_sine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after asin() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -2109,14 +2304,19 @@ void MainWindow::on_button_inverse_sine_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_inverse_tangent_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after atan() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -2135,7 +2335,12 @@ void MainWindow::on_button_inverse_tangent_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 /*
 void MainWindow::on_button_logarithm_common_clicked() {
@@ -2166,7 +2371,7 @@ void MainWindow::on_button_logarithm_common_clicked() {
 
     // Prevent clearing the equation after log() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -2185,7 +2390,12 @@ void MainWindow::on_button_logarithm_common_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 /*
 void MainWindow::on_button_logarithm_natural_clicked() {
@@ -2216,7 +2426,7 @@ void MainWindow::on_button_logarithm_natural_clicked() {
 
     // Prevent clearing the equation after log() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -2235,7 +2445,12 @@ void MainWindow::on_button_logarithm_natural_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_modulus_clicked() {
     appendOperator(" mod ");  // same flow as +, -, *, /
@@ -2264,7 +2479,7 @@ void MainWindow::on_button_percent_clicked() {
 
     // Prevent clearing the equation after %() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -2283,12 +2498,17 @@ void MainWindow::on_button_percent_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 
 
 void MainWindow::on_button_random_number_clicked() {
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -2313,14 +2533,19 @@ void MainWindow::on_button_random_number_clicked() {
     number_is_negative = (r < 0);
     dp_used = (std::floor(r) != r);
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_reciprocal_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after reciprocal() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -2339,14 +2564,19 @@ void MainWindow::on_button_reciprocal_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_sine_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after sin() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -2365,10 +2595,19 @@ void MainWindow::on_button_sine_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_square_clicked() {
     std::string x = concat_numeric_input_buffer_content();
+
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
+        just_evaluated_full = false;
+    }
 
     // If user has just typed a number, commit it to the equation buffer
     if (!new_number) {
@@ -2383,14 +2622,19 @@ void MainWindow::on_button_square_clicked() {
     equation_buffer.push_back("^");
     equation_buffer.push_back("2");
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_square_root_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after sin() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -2409,14 +2653,19 @@ void MainWindow::on_button_square_root_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_tangent_clicked() {
     std::string x = concat_numeric_input_buffer_content();
 
     // Prevent clearing the equation after sin() if we just finished "="
     // Prevent previous number from persisting in function 
-    if (just_evaluated_full) {
+    bool was_full_eval = just_evaluated_full; if (just_evaluated_full) {
         equation_buffer.clear();
         just_evaluated_full = false;
     }
@@ -2435,7 +2684,12 @@ void MainWindow::on_button_tangent_clicked() {
     number_is_negative = false;
     dp_used = false;
 
-    updateDisplay();
+    if (was_full_eval) {
+        ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    }
+    else {
+        updateDisplay();
+    }
 }
 void MainWindow::on_button_x_th_root_clicked() {
     // Commit the current number (the root index x)
