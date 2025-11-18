@@ -1622,7 +1622,9 @@ void MainWindow::on_button_parentheses_left_clicked() {
     }
 
     char lc = lastChar();
-    bool afterOpOrStart = (lc == 0 || lc == '(' || lc == '+' || lc == '-' || lc == '*' || lc == '/');
+    bool afterOpOrStart =
+    (lc == 0 || lc == '(' || lc == '+' || lc == '-' ||
+    lc == '*' || lc == '/' || lc == '^' || lc == ',');
 
     if (afterOpOrStart) {
         push_open();
