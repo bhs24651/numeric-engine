@@ -3572,8 +3572,11 @@
    <property name="checked">
     <bool>false</bool>
    </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
-    <string>&amp;Programmer</string>
+    <string>&amp;Programmer (Coming Soon!)</string>
    </property>
   </action>
   <action name="actionHelp">
