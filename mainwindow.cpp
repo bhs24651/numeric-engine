@@ -1128,11 +1128,13 @@ void MainWindow::updateDisplay() {
     std::string current = concat_numeric_input_buffer_content();
 
     ui->answerInputLabel->setText(QString::fromStdString(current));
+    ui->answerInputLabel_2->setText(QString::fromStdString(current));
     // OLD:
     // ui->equationLabel->setText(QString::fromStdString(eq));
 
     // NEW (beautified):
     ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+    ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
 }
 
 MainWindow::MainWindow(QWidget* parent)
@@ -1322,6 +1324,8 @@ MainWindow::MainWindow(QWidget* parent)
     // Disable Memory Clear and Memory Recall buttons at startup
     ui->memory_clear->setEnabled(false);
     ui->memory_recall->setEnabled(false);
+    ui->memory_clear_2->setEnabled(false);
+    ui->memory_recall_2->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
@@ -1498,6 +1502,7 @@ void MainWindow::appendOperator(const std::string& op) {
         // We've already shown the nicely formatted result in answerInputLabel.
         // Only refresh the equation line (e.g. "Ans +").
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         // Normal behavior: update both equation and current-entry display.
@@ -1589,6 +1594,7 @@ void MainWindow::on_button_equals_clicked() {
 
     // show pretty (with sin, √, ×, ÷, etc.)
     ui->equationLabel->setText(pretty_equation_from_tokens(eval_tokens) + " =");
+    ui->equationLabel_2->setText(pretty_equation_from_tokens(eval_tokens) + " =");
 
     // make evaluator-safe
     eval_tokens = expandDisplayFuncs(eval_tokens);
@@ -1608,11 +1614,13 @@ void MainWindow::on_button_equals_clicked() {
     // show to user
     if (!last_eval_error.empty()) {
         ui->answerInputLabel->setText(QString::fromStdString(last_eval_error));
+        ui->answerInputLabel_2->setText(QString::fromStdString(last_eval_error));
         last_eval_error.clear();
         return;
     }
     else {
         ui->answerInputLabel->setText(QString::fromStdString(disp));
+        ui->answerInputLabel_2->setText(QString::fromStdString(disp));
     }
 
     //// keep raw for chaining
@@ -1653,6 +1661,8 @@ void MainWindow::on_button_memory_add_clicked() {
     // (Optional) visual cue could be added here if you have a label
     ui->memory_clear->setEnabled(true);
     ui->memory_recall->setEnabled(true);
+    ui->memory_clear_2->setEnabled(true);
+    ui->memory_recall_2->setEnabled(true);
 }
 
 void MainWindow::on_button_memory_subtract_clicked() {
@@ -1660,6 +1670,8 @@ void MainWindow::on_button_memory_subtract_clicked() {
     memory -= current_entry_to_big();
     ui->memory_clear->setEnabled(true);
     ui->memory_recall->setEnabled(true);
+    ui->memory_clear_2->setEnabled(true);
+    ui->memory_recall_2->setEnabled(true);
 }
 
 void MainWindow::on_button_memory_recall_clicked() {
@@ -1673,6 +1685,8 @@ void MainWindow::on_button_memory_clear_clicked() {
     memory = 0;
     ui->memory_clear->setEnabled(false);
     ui->memory_recall->setEnabled(false);
+    ui->memory_clear_2->setEnabled(false);
+    ui->memory_recall_2->setEnabled(false);
 }
 
 void MainWindow::on_button_parentheses_left_clicked() {
@@ -1780,6 +1794,8 @@ void MainWindow::on_button_absolute_value_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
+
     }
     else {
         updateDisplay();
@@ -1878,6 +1894,7 @@ void MainWindow::on_button_cosine_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -1913,6 +1930,7 @@ void MainWindow::on_button_exponent_scientific_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -1948,6 +1966,7 @@ void MainWindow::on_button_exponential_clicked()
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2002,6 +2021,7 @@ void MainWindow::on_button_exponential_base10_clicked() {
     new_number = true;
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2039,6 +2059,7 @@ void MainWindow::on_button_exponential_natural_clicked() {
     new_number = true;
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2074,6 +2095,7 @@ void MainWindow::on_button_factorial_clicked() {
     long long n = static_cast<long long>(v.get_d());
     if (n < 0) {
         ui->answerInputLabel->setText("Error: fact(n) (n<0)");
+        ui->answerInputLabel_2->setText("Error: fact(n) (n<0)");
         return;
     }
 
@@ -2089,6 +2111,7 @@ void MainWindow::on_button_factorial_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2120,6 +2143,7 @@ void MainWindow::on_button_hyp_cosine_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2151,6 +2175,7 @@ void MainWindow::on_button_hyp_sine_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2182,6 +2207,7 @@ void MainWindow::on_button_hyp_tangent_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2213,6 +2239,7 @@ void MainWindow::on_button_inverse_cosine_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2233,6 +2260,7 @@ void MainWindow::on_button_inverse_hyp_sine_clicked() {
     new_number = true; number_is_negative = false; dp_used = false;
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2254,6 +2282,7 @@ void MainWindow::on_button_inverse_hyp_cosine_clicked() {
     new_number = true; number_is_negative = false; dp_used = false;
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2275,6 +2304,7 @@ void MainWindow::on_button_inverse_hyp_tangent_clicked() {
     new_number = true; number_is_negative = false; dp_used = false;
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2306,6 +2336,7 @@ void MainWindow::on_button_inverse_sine_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2337,6 +2368,7 @@ void MainWindow::on_button_inverse_tangent_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2392,6 +2424,7 @@ void MainWindow::on_button_logarithm_common_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2447,6 +2480,7 @@ void MainWindow::on_button_logarithm_natural_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2500,6 +2534,7 @@ void MainWindow::on_button_percent_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2535,6 +2570,7 @@ void MainWindow::on_button_random_number_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2566,6 +2602,7 @@ void MainWindow::on_button_reciprocal_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2597,6 +2634,7 @@ void MainWindow::on_button_sine_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2624,6 +2662,7 @@ void MainWindow::on_button_square_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2655,6 +2694,7 @@ void MainWindow::on_button_square_root_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2686,6 +2726,7 @@ void MainWindow::on_button_tangent_clicked() {
 
     if (was_full_eval) {
         ui->equationLabel->setText(pretty_equation_from_tokens(equation_buffer));
+        ui->equationLabel_2->setText(pretty_equation_from_tokens(equation_buffer));
     }
     else {
         updateDisplay();
@@ -2706,6 +2747,7 @@ void MainWindow::on_button_x_th_root_clicked() {
     BigFloat v(x);
     if (v < 0) {
         ui->answerInputLabel->setText("Error: xthroot(<0)");
+        ui->answerInputLabel_2->setText("Error: xthroot(<0)");
         return;
     }
     mpf_t tmp; mpf_init(tmp);
