@@ -105,7 +105,7 @@
      <string>Display result in Scientific Notation, with</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="spinBox">
+   <widget class="QSpinBox" name="round_spinBox">
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -151,7 +151,7 @@
      <string>significant digits</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="spinBox_2">
+   <widget class="QSpinBox" name="scientific_spinBox">
     <property name="geometry">
      <rect>
       <x>60</x>
