@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Qt6
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 COMPONENTS Widgets REQUIRED)
 
 # GMP manual include and link (since find_package doesn't work on Windows)
 include_directories("C:/vcpkg/installed/x64-windows/include")
@@ -17,7 +17,7 @@ link_directories("C:/vcpkg/installed/x64-windows/lib")
 # --- Executable definition (cross-platform) ---
 if (WIN32)
     # Windows: suppress console window in GUI apps
-    qt_add_executable(${PROJECT_NAME} WIN32
+    add_executable(${PROJECT_NAME} WIN32
         main.cpp
         mainwindow.cpp
         mainwindow.h
@@ -37,7 +37,7 @@ if (WIN32)
     )
 elseif (APPLE)
     # macOS: make a proper .app bundle
-    qt_add_executable(${PROJECT_NAME} MACOSX_BUNDLE
+    add_executable(${PROJECT_NAME} MACOSX_BUNDLE
         main.cpp
         mainwindow.cpp
         mainwindow.h
@@ -57,7 +57,7 @@ elseif (APPLE)
     )
 else ()
     # Linux / other platforms
-    qt_add_executable(${PROJECT_NAME}
+    add_executable(${PROJECT_NAME}
         main.cpp
         mainwindow.cpp
         mainwindow.h
@@ -83,3 +83,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     gmp
     gmpxx
 )
+
+# This line tells CMake to ensure the location of generated UI headers is included automatically
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
