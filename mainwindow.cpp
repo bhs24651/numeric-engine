@@ -1143,10 +1143,14 @@ MainWindow::MainWindow(QWidget* parent)
 {
     ui->setupUi(this);
 
+    // Hide the Converter QMenu due to lack of resources for development
+    ui->menuConverter->menuAction()->setVisible(false);
+
     // Create Interactable QAction from QMenu placeholders
-    QMenu* converterMenuPlaceholder = ui->menuConverter;
+    // QMenu* converterMenuPlaceholder = ui->menuConverter;
     QMenu* settingsMenuPlaceholder = ui->menuSettings;
 
+    /*
     if (converterMenuPlaceholder) {
         QAction* converterAction = new QAction(converterMenuPlaceholder->title(), this);
         menuBar()->insertAction(converterMenuPlaceholder->menuAction(), converterAction);
@@ -1154,6 +1158,7 @@ MainWindow::MainWindow(QWidget* parent)
         menuBar()->removeAction(converterMenuPlaceholder->menuAction());
         converterMenuPlaceholder->deleteLater(); // Use deleteLater for safety
     }
+    */
     if (settingsMenuPlaceholder) {
         QAction* settingsAction = new QAction(settingsMenuPlaceholder->title(), this);
         menuBar()->insertAction(settingsMenuPlaceholder->menuAction(), settingsAction);
