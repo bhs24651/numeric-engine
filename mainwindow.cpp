@@ -2,11 +2,16 @@
 #include "ui_mainwindow.h"
 
 #include <QDebug> // for outputting debug messages
+#include <QDialog>
 
 #include "converter.h" // Include header for Converter form
+#include "ui_converter.h"
 #include "settings.h" // Include header for Settings form
+#include "ui_settings.h"
 #include "help.h" // Include header for Help form
+#include "ui_help.h"
 #include "about.h" // Include header for About form
+#include "ui_about.h"
 
 #include <gmp.h> // to handle the Arithmetic
 #include <gmpxx.h>   // <-- add (C++ API; keep <gmp.h> or remove if unused)
@@ -1385,10 +1390,43 @@ void MainWindow::on_actionHelp_triggered()
 }
 void MainWindow::on_actionAbout_triggered()
 {
-    // Create an instance of the About form
-    about* about_form = new about(this);
-    // ... and show it on screen
-    about_form->show();
+    //// Create an instance of the About form
+    //about* about_form = new about(this);
+    //// ... and show it on screen
+    //about_form->show();
+
+    QDialog dlg(this);
+
+    // Step 1: Create a container main window
+    QMainWindow* container = new QMainWindow();
+
+    // Step 2: Apply the UI to it
+    Ui::aboutClass ui;
+    ui.setupUi(container);
+
+    // Step 3: Get the central widget created by the UI
+    QWidget* central = container->centralWidget();
+    if (!central) {
+        // If the .ui file has no central widget, we must create one
+        central = new QWidget();
+        container->setCentralWidget(central);
+    }
+
+    // Step 4: Put the central widget into the dialog layout
+    QVBoxLayout* layout = new QVBoxLayout(&dlg);
+    layout->addWidget(central);
+
+    // Make sure the widget keeps ownership inside the dialog
+    central->setParent(&dlg);
+
+    // Optional: resize to match original main window
+    dlg.resize(container->size());
+    dlg.setWindowTitle("About Numeric Engine");
+
+    // Lock size here
+    dlg.setFixedSize(dlg.size());
+
+    dlg.exec();
 }
 
 // Functions to handle the Calculator Buttons' input

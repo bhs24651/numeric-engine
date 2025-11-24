@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>350</width>
+    <width>365</width>
     <height>400</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>350</width>
+    <width>365</width>
     <height>400</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>350</width>
+    <width>365</width>
     <height>400</height>
    </size>
   </property>
@@ -281,9 +281,7 @@
      </rect>
     </property>
     <property name="font">
-     <font>
-      <family>DejaVu Sans</family>
-     </font>
+     <font/>
     </property>
     <property name="currentFont">
      <font>
@@ -391,9 +389,7 @@
      </rect>
     </property>
     <property name="font">
-     <font>
-      <family>DejaVu Sans</family>
-     </font>
+     <font/>
     </property>
     <property name="currentFont">
      <font>
@@ -405,6 +401,22 @@
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>auto_format</tabstop>
+  <tabstop>round_format</tabstop>
+  <tabstop>round_spinBox</tabstop>
+  <tabstop>scientific_format</tabstop>
+  <tabstop>scientific_spinBox</tabstop>
+  <tabstop>choose_color_calculator_background</tabstop>
+  <tabstop>choose_color_primary_button</tabstop>
+  <tabstop>choose_color_primary_button_text</tabstop>
+  <tabstop>choose_color_secondary_button</tabstop>
+  <tabstop>choose_color_secondary_button_text</tabstop>
+  <tabstop>choose_button_font_combobox</tabstop>
+  <tabstop>choose_color_display_background</tabstop>
+  <tabstop>choose_color_display_text</tabstop>
+  <tabstop>choose_display_font_combobox</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

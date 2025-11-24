@@ -34,6 +34,8 @@ settings::~settings()
     delete ui;
 }
 
+// TODO: Link "choose color" buttons to QColorDialog's
+
 void settings::on_auto_format_toggled() {}
 void settings::on_round_format_toggled() {}
 void settings::on_scientific_format_toggled() {}
