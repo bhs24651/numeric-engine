@@ -4,6 +4,9 @@
 #include <QDebug> // for outputting debug messages
 #include <QDialog>
 
+#include <QSettings>
+#include <QPushButton>
+
 #include "converter.h" // Include header for Converter form
 #include "ui_converter.h"
 #include "settings.h" // Include header for Settings form
@@ -763,6 +766,356 @@ void MainWindow::load_entry_from_big(const mpf_class& x) {
     }
 }
 
+// Helper function to calculate a shaded color
+QColor calculateShade(const QColor& baseColor, int rgbSubtraction) {
+    int r = std::abs(baseColor.red() - rgbSubtraction);
+    int g = std::abs(baseColor.green() - rgbSubtraction);
+    int b = std::abs(baseColor.blue() - rgbSubtraction);
+    return QColor(r, g, b);
+}
+
+// Helper to Apply Customization Settings
+void MainWindow::applyCustomizationSettings(const settings& s) {
+    // Retrieve current settings
+    QColor primaryButtonColor = s.getPrimaryButtonColor();
+    QColor primaryTextColor = s.getPrimaryTextColor();
+    QColor secondaryButtonColor = s.getSecondaryButtonColor();
+    QColor secondaryTextColor = s.getSecondaryTextColor();
+    QColor displayBackgroundColor = s.getDisplayBackgroundColor();
+    QColor displayTextColor = s.getDisplayTextColor();
+    QColor backgroundColor = s.getCalculatorBackgroundColor();
+
+    QFont buttonFont = s.getButtonFont();
+    QFont displayFont = s.getDisplayFont();
+
+    // Applying the custom colors on the buttons
+
+    QColor primaryButtonHoverColor = calculateShade(primaryButtonColor, 5);
+    QColor secondaryButtonHoverColor = calculateShade(secondaryButtonColor, 5);
+    QColor primaryButtonPressedColor = calculateShade(primaryButtonColor, 11);
+    QColor secondaryButtonPressedColor = calculateShade(secondaryButtonColor, 11);
+    QColor primaryButtonBorderColor = calculateShade(primaryButtonColor, 16);
+    QColor secondaryButtonBorderColor = calculateShade(secondaryButtonColor, 16);
+
+    QColor primaryButtonDisabledColor = calculateShade(primaryButtonColor, 11);
+    QColor primaryButtonDisabledTextColor = calculateShade(primaryTextColor, -93);
+    QColor primaryButtonDisabledBorderColor = calculateShade(primaryButtonColor, 30);
+
+    // define stylesheets
+
+    ui->centralwidget->setObjectName("centralWidget");
+
+    QString backgroundStyleSheet = QString(
+        "#centralWidget { background-color: %1; }"
+    ).arg(backgroundColor.name());
+
+    QString primaryButtonStyleSheet = QString(
+        // Default state
+        "QPushButton {"
+        "   background-color: %1;"
+        "   color: %2;"
+        "   border: 1px solid %3;"
+        "   border-radius: 3px;"
+        "   margin: 2px 2px"
+        "}"
+
+        // Hover state (when the mouse is over the button)
+        "QPushButton:hover {"
+        "   background-color: %4;"
+        "}"
+
+        // Pressed state (when the user clicks the button)
+        "QPushButton:pressed {"
+        "   background-color: %5;"
+        "   border-style: inset;"
+        "}"
+
+        // Disabled state
+        "QPushButton:disabled {"
+        "   background-color: %6;"
+        "   color: %7;"             // Change text color
+        "   border-color: %8;"  // Lighter border
+        "}"
+    ).arg(
+        primaryButtonColor.name(), 
+        primaryTextColor.name(), 
+        primaryButtonBorderColor.name(), 
+        primaryButtonHoverColor.name(), 
+        primaryButtonPressedColor.name(), 
+        primaryButtonDisabledColor.name(), 
+        primaryButtonDisabledTextColor.name(), 
+        primaryButtonDisabledBorderColor.name()
+    );
+
+    QString secondaryButtonStyleSheet = QString(
+        // Default state
+        "QPushButton {"
+        "   background-color: %1;"
+        "   color: %2;"
+        "   border: 1px solid %3;"
+        "   border-radius: 3px;"
+        "   margin: 3px 3px"
+        "}"
+
+        // Hover state (when the mouse is over the button)
+        "QPushButton:hover {"
+        "   background-color: %4;"
+        "}"
+
+        // Pressed state (when the user clicks the button)
+        "QPushButton:pressed {"
+        "   background-color: %5;"
+        "   border-style: inset;"
+        "}"
+    ).arg(
+        secondaryButtonColor.name(),
+        secondaryTextColor.name(), 
+        secondaryButtonBorderColor.name(), 
+        secondaryButtonHoverColor.name(), 
+        secondaryButtonPressedColor.name()
+    );
+
+    QString displayBackgroundStyleSheet = QString(
+        "QFrame { background-color: %1; border: none; }"
+    ).arg(displayBackgroundColor.name());
+
+    QString equationLabelStyleSheet = QString(
+        "QLabel {"
+        "   color: %1;"             // Sets the text color dynamically
+        "   font-size: 11pt;"
+        "}"
+    ).arg(displayTextColor.name());
+
+    QString answerInputLabelStyleSheet = QString(
+        "QLabel {"
+        "   color: %1;"             // Sets the text color dynamically
+        "   font-size: 18pt;"
+        "}"
+    ).arg(displayTextColor.name());
+
+    QString modeDisplayStyleSheet = QString(
+        "QLabel {"
+        "   color: %1;"             // Sets the text color dynamically
+        "   font-size: 9pt;"
+        "}"
+    ).arg(displayTextColor.name());
+    
+    // set stylesheets to UI elements here
+
+    // calculator background
+    ui->centralwidget->setStyleSheet(backgroundStyleSheet);
+
+    // primary colored buttons
+    ui->ans->setStyleSheet(primaryButtonStyleSheet);
+    ui->add->setStyleSheet(primaryButtonStyleSheet);
+    ui->decimal_point->setStyleSheet(primaryButtonStyleSheet);
+    ui->divide->setStyleSheet(primaryButtonStyleSheet);
+    ui->multiply->setStyleSheet(primaryButtonStyleSheet);
+    ui->n0->setStyleSheet(primaryButtonStyleSheet);
+    ui->n1->setStyleSheet(primaryButtonStyleSheet);
+    ui->n2->setStyleSheet(primaryButtonStyleSheet);
+    ui->n3->setStyleSheet(primaryButtonStyleSheet);
+    ui->n4->setStyleSheet(primaryButtonStyleSheet);
+    ui->n5->setStyleSheet(primaryButtonStyleSheet);
+    ui->n6->setStyleSheet(primaryButtonStyleSheet);
+    ui->n7->setStyleSheet(primaryButtonStyleSheet);
+    ui->n8->setStyleSheet(primaryButtonStyleSheet);
+    ui->n9->setStyleSheet(primaryButtonStyleSheet);
+    ui->negate->setStyleSheet(primaryButtonStyleSheet);
+    ui->subtract->setStyleSheet(primaryButtonStyleSheet);
+
+    ui->angleUnitSelection->setStyleSheet(primaryButtonStyleSheet);
+    ui->absolute_value->setStyleSheet(primaryButtonStyleSheet);
+    ui->constant_e->setStyleSheet(primaryButtonStyleSheet);
+    ui->constant_pi->setStyleSheet(primaryButtonStyleSheet);
+    ui->cosine->setStyleSheet(primaryButtonStyleSheet);
+    ui->exponent_scientific->setStyleSheet(primaryButtonStyleSheet);
+    ui->exponential->setStyleSheet(primaryButtonStyleSheet);
+    ui->exponential_base10->setStyleSheet(primaryButtonStyleSheet);
+    ui->exponential_natural->setStyleSheet(primaryButtonStyleSheet);
+    ui->factorial->setStyleSheet(primaryButtonStyleSheet);
+    ui->hyp_cosine->setStyleSheet(primaryButtonStyleSheet);
+    ui->hyp_sine->setStyleSheet(primaryButtonStyleSheet);
+    ui->hyp_tangent->setStyleSheet(primaryButtonStyleSheet);
+    ui->inverse_cosine->setStyleSheet(primaryButtonStyleSheet);
+    ui->inverse_hyp_cosine->setStyleSheet(primaryButtonStyleSheet);
+    ui->inverse_hyp_sine->setStyleSheet(primaryButtonStyleSheet);
+    ui->inverse_hyp_tangent->setStyleSheet(primaryButtonStyleSheet);
+    ui->inverse_sine->setStyleSheet(primaryButtonStyleSheet);
+    ui->inverse_tangent->setStyleSheet(primaryButtonStyleSheet);
+    ui->logarithm_common->setStyleSheet(primaryButtonStyleSheet);
+    ui->logarithm_natural->setStyleSheet(primaryButtonStyleSheet);
+    ui->memory_add->setStyleSheet(primaryButtonStyleSheet);
+    ui->memory_clear->setStyleSheet(primaryButtonStyleSheet);
+    ui->memory_recall->setStyleSheet(primaryButtonStyleSheet);
+    ui->memory_subtract->setStyleSheet(primaryButtonStyleSheet);
+    ui->modulus->setStyleSheet(primaryButtonStyleSheet);
+    ui->parentheses_left->setStyleSheet(primaryButtonStyleSheet);
+    ui->parentheses_right->setStyleSheet(primaryButtonStyleSheet);
+    ui->percent->setStyleSheet(primaryButtonStyleSheet);
+    ui->random_number->setStyleSheet(primaryButtonStyleSheet);
+    ui->reciprocal->setStyleSheet(primaryButtonStyleSheet);
+    ui->sine->setStyleSheet(primaryButtonStyleSheet);
+    ui->square->setStyleSheet(primaryButtonStyleSheet);
+    ui->square_root->setStyleSheet(primaryButtonStyleSheet);
+    ui->tangent->setStyleSheet(primaryButtonStyleSheet);
+    ui->x_th_root->setStyleSheet(primaryButtonStyleSheet);
+
+    ui->ans_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->add_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->decimal_point_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->divide_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->multiply_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->n0_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->n1_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->n2_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->n3_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->n4_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->n5_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->n6_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->n7_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->n8_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->n9_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->negate_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->subtract_2->setStyleSheet(primaryButtonStyleSheet);
+
+    ui->absolute_value_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->exponential_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->memory_add_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->memory_clear_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->memory_recall_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->memory_subtract_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->parentheses_left_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->parentheses_right_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->reciprocal_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->square_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->square_root_2->setStyleSheet(primaryButtonStyleSheet);
+    ui->x_th_root_2->setStyleSheet(primaryButtonStyleSheet);
+
+    // secondary colored buttons
+    ui->ac->setStyleSheet(secondaryButtonStyleSheet);
+    ui->backspace->setStyleSheet(secondaryButtonStyleSheet);
+    ui->equals->setStyleSheet(secondaryButtonStyleSheet);
+    ui->ac_2->setStyleSheet(secondaryButtonStyleSheet);
+    ui->backspace_2->setStyleSheet(secondaryButtonStyleSheet);
+    ui->equals_2->setStyleSheet(secondaryButtonStyleSheet);
+
+    // display
+    ui->display->setStyleSheet(displayBackgroundStyleSheet);
+    ui->equationLabel->setStyleSheet(equationLabelStyleSheet);
+    ui->answerInputLabel->setStyleSheet(answerInputLabelStyleSheet);
+    ui->modeDisplay->setStyleSheet(modeDisplayStyleSheet);
+    ui->display_2->setStyleSheet(displayBackgroundStyleSheet);
+    ui->equationLabel_2->setStyleSheet(equationLabelStyleSheet);
+    ui->answerInputLabel_2->setStyleSheet(answerInputLabelStyleSheet);
+    ui->modeDisplay_2->setStyleSheet(modeDisplayStyleSheet);
+
+    // set fonts here
+
+    // buttons with big font size
+    buttonFont.setPointSize(14);
+    ui->ans->setFont(buttonFont);
+    ui->add->setFont(buttonFont);
+    ui->decimal_point->setFont(buttonFont);
+    ui->divide->setFont(buttonFont);
+    ui->multiply->setFont(buttonFont);
+    ui->n0->setFont(buttonFont);
+    ui->n1->setFont(buttonFont);
+    ui->n2->setFont(buttonFont);
+    ui->n3->setFont(buttonFont);
+    ui->n4->setFont(buttonFont);
+    ui->n5->setFont(buttonFont);
+    ui->n6->setFont(buttonFont);
+    ui->n7->setFont(buttonFont);
+    ui->n8->setFont(buttonFont);
+    ui->n9->setFont(buttonFont);
+    ui->negate->setFont(buttonFont);
+    ui->subtract->setFont(buttonFont);
+    ui->ac->setFont(buttonFont);
+    ui->backspace->setFont(buttonFont);
+    ui->equals->setFont(buttonFont);
+    
+
+    ui->ans_2->setFont(buttonFont);
+    ui->add_2->setFont(buttonFont);
+    ui->decimal_point_2->setFont(buttonFont);
+    ui->divide_2->setFont(buttonFont);
+    ui->multiply_2->setFont(buttonFont);
+    ui->n0_2->setFont(buttonFont);
+    ui->n1_2->setFont(buttonFont);
+    ui->n2_2->setFont(buttonFont);
+    ui->n3_2->setFont(buttonFont);
+    ui->n4_2->setFont(buttonFont);
+    ui->n5_2->setFont(buttonFont);
+    ui->n6_2->setFont(buttonFont);
+    ui->n7_2->setFont(buttonFont);
+    ui->n8_2->setFont(buttonFont);
+    ui->n9_2->setFont(buttonFont);
+    ui->negate_2->setFont(buttonFont);
+    ui->subtract_2->setFont(buttonFont);
+    ui->ac_2->setFont(buttonFont);
+    ui->backspace_2->setFont(buttonFont);
+    ui->equals_2->setFont(buttonFont);
+
+    // buttons with small font size
+    buttonFont.setPointSize(9);
+    ui->angleUnitSelection->setFont(buttonFont);
+    ui->absolute_value->setFont(buttonFont);
+    ui->constant_e->setFont(buttonFont);
+    ui->constant_pi->setFont(buttonFont);
+    ui->cosine->setFont(buttonFont);
+    ui->exponent_scientific->setFont(buttonFont);
+    ui->exponential->setFont(buttonFont);
+    ui->exponential_base10->setFont(buttonFont);
+    ui->exponential_natural->setFont(buttonFont);
+    ui->factorial->setFont(buttonFont);
+    ui->hyp_cosine->setFont(buttonFont);
+    ui->hyp_sine->setFont(buttonFont);
+    ui->hyp_tangent->setFont(buttonFont);
+    ui->inverse_cosine->setFont(buttonFont);
+    ui->inverse_hyp_cosine->setFont(buttonFont);
+    ui->inverse_hyp_sine->setFont(buttonFont);
+    ui->inverse_hyp_tangent->setFont(buttonFont);
+    ui->inverse_sine->setFont(buttonFont);
+    ui->inverse_tangent->setFont(buttonFont);
+    ui->logarithm_common->setFont(buttonFont);
+    ui->logarithm_natural->setFont(buttonFont);
+    ui->memory_add->setFont(buttonFont);
+    ui->memory_clear->setFont(buttonFont);
+    ui->memory_recall->setFont(buttonFont);
+    ui->memory_subtract->setFont(buttonFont);
+    ui->modulus->setFont(buttonFont);
+    ui->parentheses_left->setFont(buttonFont);
+    ui->parentheses_right->setFont(buttonFont);
+    ui->percent->setFont(buttonFont);
+    ui->random_number->setFont(buttonFont);
+    ui->reciprocal->setFont(buttonFont);
+    ui->sine->setFont(buttonFont);
+    ui->square->setFont(buttonFont);
+    ui->square_root->setFont(buttonFont);
+    ui->tangent->setFont(buttonFont);
+    ui->x_th_root->setFont(buttonFont);
+
+    ui->absolute_value_2->setFont(buttonFont);
+    ui->exponential_2->setFont(buttonFont);
+    ui->memory_add_2->setFont(buttonFont);
+    ui->memory_clear_2->setFont(buttonFont);
+    ui->memory_recall_2->setFont(buttonFont);
+    ui->memory_subtract_2->setFont(buttonFont);
+    ui->parentheses_left_2->setFont(buttonFont);
+    ui->parentheses_right_2->setFont(buttonFont);
+    ui->reciprocal_2->setFont(buttonFont);
+    ui->square_2->setFont(buttonFont);
+    ui->square_root_2->setFont(buttonFont);
+    ui->x_th_root_2->setFont(buttonFont);
+
+    // display elements
+    ui->equationLabel->setFont(displayFont);
+    ui->answerInputLabel->setFont(displayFont);
+    displayFont.setPointSize(9);
+    ui->modeDisplay->setFont(displayFont);
+}
+
 static BigFloat big_pi() {
     // return BigFloat(std::acos(-1.0));
     return BigFloat("3.14159265358979323846");
@@ -1148,6 +1501,9 @@ MainWindow::MainWindow(QWidget* parent)
 {
     ui->setupUi(this);
 
+    // Apply Customization Settings
+    applyCustomizationSettings(appSettings);
+
     // Hide the Converter QMenu due to lack of resources for development
     ui->menuConverter->menuAction()->setVisible(false);
 
@@ -1374,10 +1730,10 @@ void MainWindow::openConverter()
 // Settings
 void MainWindow::openSettings()
 {
-    // Create an instance of the Settings form
-    settings* settings_form = new settings(this);
-    // ... and show it on screen
-    settings_form->show();
+    // Show the shared settings window stored in the MainWindow
+    appSettings.show();
+    appSettings.raise();
+    appSettings.activateWindow();
 }
 
 // Help

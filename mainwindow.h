@@ -2,8 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QColor>
 #include <gmp.h>
 #include <gmpxx.h>
+#include "settings.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -146,5 +148,9 @@ private slots:
 private:
     Ui::MainWindow* ui;
     AngleUnit currentAngleUnit() const;
+    settings appSettings;
+    void applyCustomizationSettings(const settings& s);
+    
+
 };
 #endif // MAINWINDOW_H
