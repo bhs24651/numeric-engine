@@ -1620,8 +1620,9 @@ MainWindow::MainWindow(QWidget* parent)
     // Apply Keyboard Shortcuts
     applyKeyboardShortcuts();
 
-    // Hide the Converter QMenu due to lack of resources for development
+    // Hide the Converter QMenu and the Programmer layout QAction due to lack of resources for development
     ui->menuConverter->menuAction()->setVisible(false);
+    ui->actionProgrammer->setVisible(false);
 
     // Create Interactable QAction from QMenu placeholders
     // QMenu* converterMenuPlaceholder = ui->menuConverter;

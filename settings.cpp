@@ -88,6 +88,14 @@ settings::settings(QWidget* parent)
     QObject::connect(ui->choose_display_font_combobox, &QFontComboBox::currentFontChanged, this, &settings::on_choose_display_font_combobox_currentFontChanged);
 
     QObject::connect(ui->reset_customization_to_defaults, &QPushButton::clicked, this, &settings::handle_reset_customization_to_defaults);
+
+    // Features that aren't visible have been temporarily hidden
+    ui->round_format->setVisible(false);
+    ui->scientific_format->setVisible(false);
+    ui->round_spinBox->setVisible(false);
+    ui->scientific_spinBox->setVisible(false);
+    ui->dp_label->setVisible(false);
+    ui->sf_label->setVisible(false);
 }
 
 settings::~settings()
