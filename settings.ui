@@ -68,6 +68,9 @@
     </property>
    </widget>
    <widget class="QRadioButton" name="round_format">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -87,6 +90,9 @@
     </property>
    </widget>
    <widget class="QRadioButton" name="scientific_format">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -106,6 +112,9 @@
     </property>
    </widget>
    <widget class="QSpinBox" name="round_spinBox">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>140</x>
@@ -116,6 +125,9 @@
     </property>
    </widget>
    <widget class="QLabel" name="dp_label">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>210</x>
@@ -134,6 +146,9 @@
     </property>
    </widget>
    <widget class="QLabel" name="sf_label">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>110</x>
@@ -152,6 +167,9 @@
     </property>
    </widget>
    <widget class="QSpinBox" name="scientific_spinBox">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>40</x>
