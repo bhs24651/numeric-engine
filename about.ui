@@ -63,7 +63,7 @@
      </font>
     </property>
     <property name="text">
-     <string>version 0.1 pre-alpha</string>
+     <string>version 1.0</string>
     </property>
    </widget>
    <widget class="QLabel" name="author">
