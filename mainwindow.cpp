@@ -641,7 +641,7 @@ static QString pretty_equation_from_tokens(const std::vector<std::string>& raw) 
         if (t == "FUNC_EXP10") { out += "10^";   continue; }
         if (t == "FUNC_FACT") { out += "fact";     continue; }
         if (t == "FUNC_MOD") { out += "mod";   continue; }
-        if (t == "FUNC_PERCENT") { out += "% of"; continue; }
+        if (t == "FUNC_PERCENT") { out += "%"; continue; }
         // if (t == "FUNC_XROOT") { out += QStringLiteral("√x"); continue; } // we'll refine in a sec
         if (t == "FUNC_XROOT") {
             // FUNC_XROOT(x, y) → √[x](y)
