@@ -6,6 +6,8 @@
 
 #include <QSettings>
 #include <QPushButton>
+#include <QShortcut>
+#include <QKeySequence>
 
 #include "converter.h" // Include header for Converter form
 #include "ui_converter.h"
@@ -1034,7 +1036,6 @@ void MainWindow::applyCustomizationSettings(const settings& s) {
     ui->ac->setFont(buttonFont);
     ui->backspace->setFont(buttonFont);
     ui->equals->setFont(buttonFont);
-    
 
     ui->ans_2->setFont(buttonFont);
     ui->add_2->setFont(buttonFont);
@@ -1114,6 +1115,118 @@ void MainWindow::applyCustomizationSettings(const settings& s) {
     ui->answerInputLabel->setFont(displayFont);
     displayFont.setPointSize(9);
     ui->modeDisplay->setFont(displayFont);
+}
+
+void MainWindow::applyKeyboardShortcuts() {
+    // define keyboard shortcuts
+
+    // ac
+    QShortcut* sc_Esc = new QShortcut(QKeySequence("Esc"), this);
+    // add
+    QShortcut* sc_plus = new QShortcut(QKeySequence("+"), this);
+    QShortcut* sc_N_plus = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_Plus), this);
+    // backspace
+    QShortcut* sc_backspace = new QShortcut(QKeySequence("Backspace"), this);
+    // decimal_point
+    QShortcut* sc_decimalPoint = new QShortcut(QKeySequence("."), this);
+    QShortcut* sc_N_decimalPoint = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_Period), this);
+    // divide
+    QShortcut* sc_slash = new QShortcut(QKeySequence("/"), this);
+    QShortcut* sc_N_slash = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_Slash), this);
+    // equals
+    QShortcut* sc_equals = new QShortcut(QKeySequence("="), this);
+    QShortcut* sc_return = new QShortcut(QKeySequence("return"), this);
+    QShortcut* sc_N_enter = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_Enter), this);
+    // multiply
+    QShortcut* sc_asterisk = new QShortcut(QKeySequence("*"), this);
+    QShortcut* sc_N_asterisk = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_Asterisk), this);
+    // n0 - n9
+    QShortcut* sc_0 = new QShortcut(QKeySequence("0"), this);
+    QShortcut* sc_N_0 = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_0), this);
+    QShortcut* sc_1 = new QShortcut(QKeySequence("1"), this);
+    QShortcut* sc_N_1 = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_1), this);
+    QShortcut* sc_2 = new QShortcut(QKeySequence("2"), this);
+    QShortcut* sc_N_2 = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_2), this);
+    QShortcut* sc_3 = new QShortcut(QKeySequence("3"), this);
+    QShortcut* sc_N_3 = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_3), this);
+    QShortcut* sc_4 = new QShortcut(QKeySequence("4"), this);
+    QShortcut* sc_N_4 = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_4), this);
+    QShortcut* sc_5 = new QShortcut(QKeySequence("5"), this);
+    QShortcut* sc_N_5 = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_5), this);
+    QShortcut* sc_6 = new QShortcut(QKeySequence("6"), this);
+    QShortcut* sc_N_6 = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_6), this);
+    QShortcut* sc_7 = new QShortcut(QKeySequence("7"), this);
+    QShortcut* sc_N_7 = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_7), this);
+    QShortcut* sc_8 = new QShortcut(QKeySequence("8"), this);
+    QShortcut* sc_N_8 = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_8), this);
+    QShortcut* sc_9 = new QShortcut(QKeySequence("9"), this);
+    QShortcut* sc_N_9 = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_9), this);
+    // negate ([Alt]+[-])
+    QShortcut* sc_Alt_minus = new QShortcut(QKeySequence("ALT+-"), this);
+    QShortcut* sc_N_Alt_minus = new QShortcut(QKeySequence(Qt::AltModifier | Qt::KeypadModifier | Qt::Key_Minus), this);
+    // subtract
+    QShortcut* sc_minus = new QShortcut(QKeySequence("-"), this);
+    QShortcut* sc_N_minus = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_Minus), this);
+    // parentheses
+    QShortcut* sc_leftparen = new QShortcut(QKeySequence("("), this);
+    QShortcut* sc_rightparen = new QShortcut(QKeySequence(")"), this);
+    // exponential
+    QShortcut* sc_caret = new QShortcut(QKeySequence("^"), this);
+
+    // apply keyboard shortcuts
+
+    // ac
+    QObject::connect(sc_Esc, &QShortcut::activated, ui->ac, &QPushButton::click);
+    // add
+    QObject::connect(sc_plus, &QShortcut::activated, ui->add, &QPushButton::click);
+    QObject::connect(sc_N_plus, &QShortcut::activated, ui->add, &QPushButton::click);
+    // backspace
+    QObject::connect(sc_backspace, &QShortcut::activated, ui->backspace, &QPushButton::click);
+    // decimal_point
+    QObject::connect(sc_decimalPoint, &QShortcut::activated, ui->decimal_point, &QPushButton::click);
+    QObject::connect(sc_N_decimalPoint, &QShortcut::activated, ui->decimal_point, &QPushButton::click);
+    // divide
+    QObject::connect(sc_slash, &QShortcut::activated, ui->divide, &QPushButton::click);
+    QObject::connect(sc_N_slash, &QShortcut::activated, ui->divide, &QPushButton::click);
+    // equals
+    QObject::connect(sc_equals, &QShortcut::activated, ui->equals, &QPushButton::click);
+    QObject::connect(sc_return, &QShortcut::activated, ui->equals, &QPushButton::click);
+    QObject::connect(sc_N_enter, &QShortcut::activated, ui->equals, &QPushButton::click);
+    // multiply
+    QObject::connect(sc_asterisk, &QShortcut::activated, ui->multiply, &QPushButton::click);
+    QObject::connect(sc_N_asterisk, &QShortcut::activated, ui->multiply, & QPushButton::click);
+    // n0 - n9
+    QObject::connect(sc_0, &QShortcut::activated, ui->n0, &QPushButton::click);
+    QObject::connect(sc_N_0, &QShortcut::activated, ui->n0, &QPushButton::click);
+    QObject::connect(sc_1, &QShortcut::activated, ui->n1, &QPushButton::click);
+    QObject::connect(sc_N_1, &QShortcut::activated, ui->n1, &QPushButton::click);
+    QObject::connect(sc_2, &QShortcut::activated, ui->n2, &QPushButton::click);
+    QObject::connect(sc_N_2, &QShortcut::activated, ui->n2, &QPushButton::click);
+    QObject::connect(sc_3, &QShortcut::activated, ui->n3, &QPushButton::click);
+    QObject::connect(sc_N_3, &QShortcut::activated, ui->n3, &QPushButton::click);
+    QObject::connect(sc_4, &QShortcut::activated, ui->n4, &QPushButton::click);
+    QObject::connect(sc_N_4, &QShortcut::activated, ui->n4, &QPushButton::click);
+    QObject::connect(sc_5, &QShortcut::activated, ui->n5, &QPushButton::click);
+    QObject::connect(sc_N_5, &QShortcut::activated, ui->n5, &QPushButton::click);
+    QObject::connect(sc_6, &QShortcut::activated, ui->n6, &QPushButton::click);
+    QObject::connect(sc_N_6, &QShortcut::activated, ui->n6, &QPushButton::click);
+    QObject::connect(sc_7, &QShortcut::activated, ui->n7, &QPushButton::click);
+    QObject::connect(sc_N_7, &QShortcut::activated, ui->n7, &QPushButton::click);
+    QObject::connect(sc_8, &QShortcut::activated, ui->n8, &QPushButton::click);
+    QObject::connect(sc_N_8, &QShortcut::activated, ui->n8, &QPushButton::click);
+    QObject::connect(sc_9, &QShortcut::activated, ui->n9, &QPushButton::click);
+    QObject::connect(sc_N_9, &QShortcut::activated, ui->n9, &QPushButton::click);
+    // negate
+    QObject::connect(sc_Alt_minus, &QShortcut::activated, ui->negate, &QPushButton::click);
+    QObject::connect(sc_N_Alt_minus, &QShortcut::activated, ui->negate, &QPushButton::click);
+    // subtract
+    QObject::connect(sc_minus, &QShortcut::activated, ui->subtract, &QPushButton::click);
+    QObject::connect(sc_N_minus, &QShortcut::activated, ui->subtract, &QPushButton::click);
+    // paretheses
+    QObject::connect(sc_leftparen, &QShortcut::activated, ui->parentheses_left, &QPushButton::click);
+    QObject::connect(sc_rightparen, &QShortcut::activated, ui->parentheses_right, &QPushButton::click);
+    // exponential
+    QObject::connect(sc_caret, &QShortcut::activated, ui->exponential, &QPushButton::click);
 }
 
 static BigFloat big_pi() {
@@ -1503,6 +1616,9 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Apply Customization Settings
     applyCustomizationSettings(appSettings);
+
+    // Apply Keyboard Shortcuts
+    applyKeyboardShortcuts();
 
     // Hide the Converter QMenu due to lack of resources for development
     ui->menuConverter->menuAction()->setVisible(false);

@@ -150,7 +150,6 @@ private:
     AngleUnit currentAngleUnit() const;
     settings appSettings;
     void applyCustomizationSettings(const settings& s);
-    
-
+    void applyKeyboardShortcuts();
 };
 #endif // MAINWINDOW_H
