@@ -67,12 +67,12 @@ settings::settings(QWidget* parent)
     // load user settings (overwrites defaults if existing)
     loadSettings();
 
-    QObject::connect(ui->auto_format, &QRadioButton::toggled, this, &settings::on_auto_format_toggled);
-    QObject::connect(ui->round_format, &QRadioButton::toggled, this, &settings::on_round_format_toggled);
-    QObject::connect(ui->scientific_format, &QRadioButton::toggled, this, &settings::on_scientific_format_toggled);
+    // QObject::connect(ui->auto_format, &QRadioButton::toggled, this, &settings::on_auto_format_toggled);
+    // QObject::connect(ui->round_format, &QRadioButton::toggled, this, &settings::on_round_format_toggled);
+    // QObject::connect(ui->scientific_format, &QRadioButton::toggled, this, &settings::on_scientific_format_toggled);
 
-    QObject::connect(ui->round_spinBox, &QSpinBox::valueChanged, this, &settings::on_round_spinBox_valueChanged);
-    QObject::connect(ui->scientific_spinBox, &QSpinBox::valueChanged, this, &settings::on_scientific_spinBox_valueChanged);
+    // QObject::connect(ui->round_spinBox, &QSpinBox::valueChanged, this, &settings::on_round_spinBox_valueChanged);
+    // QObject::connect(ui->scientific_spinBox, &QSpinBox::valueChanged, this, &settings::on_scientific_spinBox_valueChanged);
 
     // Connect QPushButtons
     QObject::connect(ui->choose_color_primary_button, &QPushButton::clicked, this, &settings::handle_primary_button_color);
